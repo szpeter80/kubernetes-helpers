@@ -1,0 +1,46 @@
+# https://github.com/openshift/installer/blob/master/docs/user/customization.md
+# https://docs.okd.io/latest/installing/installing_bare_metal/installing-bare-metal.html#installing-bare-metal
+
+apiVersion: v1
+baseDomain: okd-demo.zzz
+metadata:
+# Openshift  / OKD cluster name
+  name: '###CLUSTER-NAME###'
+
+compute:
+# Number of workers created by the platform
+# Set replicas=0 when platform is none (you have to manually add worker nodes)
+- hyperthreading: Enabled
+  name: worker
+  replicas: 0
+
+# This needs to match the DNS records (forward/reverse)
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  replicas: 3
+
+# https://developer.ibm.com/tutorials/understanding-network-definitions-for-openshift-4-on-ibm-z-and-linuxone/
+networking:
+  # networkType: "OpenShiftSDN" is feature-frozen, the default from Openshift v4.12 is "OVNKubernetes", 
+  # and there is an official migration path from "OpenShiftSDN" -> "OVNKubernetes"
+  networkType: OVNKubernetes
+  # Pod network pool
+  clusterNetwork:
+  - cidr: 10.100.2.0/24
+  # Subnet size for pod networking, per-node
+    hostPrefix: 26
+  serviceNetwork: 
+  - 10.100.3.0/24
+
+
+
+platform:
+  none: {}
+
+fips: false
+
+pullSecret: '{"auths":{"fake":{"auth": "bar"}}}'
+
+# The SSH public key for the core user in CoreOS
+sshKey: '###SSH-PUBLIC-KEY###'   

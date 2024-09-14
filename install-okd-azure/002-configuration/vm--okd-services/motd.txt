@@ -1,0 +1,56 @@
+You can access the bootstrap node:
+ssh core@okd-bootstrap
+
+The bootstrap node's ignition config:
+http://okd-services:8080/okd4/bootstrap.ign
+
+The master nodes' ignition config:
+http://okd-services:8080/okd4/master.ign
+ ---(merge)---> https://api-int.democluster.okd-demo.zzz:22623/config/master
+
+Check Ingnition logs (use sudo, normal user might not have permission to read ignition logs):
+sudo journalctl --identifier=ignition --all
+
+Monitor the cluster provision state on the support node: 
+openshift-install --dir=/home/adminuser/install_dir/ wait-for bootstrap-complete --log-level=info
+
+
+Check the cluster by CLI: 
+
+. /home/adminuser/vm--okd-services/vm--okd-services.env
+oc whoami
+
+oc whoami —show-console
+
+oc get nodes
+oc get csr
+
+
+Approve all pending CSRs:
+
+oc get csr -ojson | jq -r '.items[] | select(.status == {} ) | .metadata.name' | xargs oc adm certificate approve "
+
+Get kubelet and container logs:
+
+journalctl -b -f -u kubelet.service
+sudo tail -f /var/log/containers/*
+
+
+Openshift version check and upgrade:
+
+oc get clusterversion
+
+NAME    VERSION AVAILABLE PROGRESSING SINCE STATUS
+version 4.1.6   True      False       21m   Cluster version is 4.1.6
+
+oc adm upgrade --to-latest=true
+
+Sample project to deploy (as project, then import workload from git):
+
+https://github.com/sclorg/nodejs-ex
+
+Backup etcd and shut down the cluster:
+
+for node in $(oc get nodes -o jsonpath='{.items[*].metadata.name}'); do oc debug node/${node} -- chroot /host  /usr/local/bin/cluster-backup.sh /home/core/assets/backup-zzzz; done 
+for node in $(oc get nodes -o jsonpath='{.items[*].metadata.name}'); do oc debug node/${node} -- chroot /host shutdown -h 1; done 
+

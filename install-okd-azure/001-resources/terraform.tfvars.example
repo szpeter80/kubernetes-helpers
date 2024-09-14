@@ -1,0 +1,24 @@
+# Azure deployment target specification
+azure_target_region      = "westeurope"
+azure_tenant_id          = "xxx"
+azure_subscription_id    = "yyy"
+
+# Project name
+x_project_name = "poc-okd-compact-cluster"
+
+# Services, bootstrap and cluster nodes size spec
+x_vm_instance_name_linux = "Standard_DS3_v2"
+x_cluster_node_count     = 3
+
+#x_remote_admin_sshkey_fn =  {
+#    public     = "/path/to/keyfile",
+#    private    = "/path/to/keyfile",
+#}
+
+# You should always tag your cloud deployed resources
+# to ensure visibility and accountability
+x_default_tags =  {
+    owner-displayName     = "John Smith",
+    owner-smtpEmail       = "jsmith@example.com",
+}
+

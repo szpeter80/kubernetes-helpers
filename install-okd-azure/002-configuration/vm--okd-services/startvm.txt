@@ -1,0 +1,4 @@
+#!/usr/bin/bash
+#TODO: make url parametric
+exec openbox-session&
+exec chromium-browser https://console-openshift-console.apps.democluster.okd-demo.zzz/ 

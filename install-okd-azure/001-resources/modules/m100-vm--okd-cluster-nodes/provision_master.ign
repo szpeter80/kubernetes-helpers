@@ -1,0 +1,12 @@
+{
+  "ignition": { 
+    "version": "3.4.0",
+    "config": {
+      "merge": [
+        {
+          "source": "http://okd-services:8080/okd4/master.ign"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,79 @@
+---
+- hosts: localhost
+  connection: local
+  become: yes
+
+  vars:
+    services_on_boot:
+      - "httpd.service"
+      - "haproxy.service"
+      - "xrdp.service"
+
+  tasks:
+  
+  - name: "Update all packages"
+    ansible.builtin.dnf:
+      name: "*"
+      state: latest
+      update_cache: yes
+
+  - name: "Install packages"
+    ansible.builtin.dnf:
+      name:
+        - butane             # required for creating Ignition files for Fedora Core OS 
+        - bind-utils         # DNS troubleshooting
+        - net-tools          # Network troubleshooting
+        - nc                 # Network troubleshooting
+        - mc
+        - jq                 # handle js from cli, eg mass-accept OKD certificate signing requests
+        - httpd              # Serve Ignition bootstrap files
+        - haproxy            # Load balancer for cluster api services
+        - xrdp               # EPEL - xrdp
+        - tigervnc-server    # EPEL - VNC server
+        - chromium           # EPEL - Chromium for OKD / OpenShift Web UI
+        - openbox            # EPEL - minimal window manager for the service node
+        - xterm              # X terminal for minimal xrdp session
+      state: present
+      
+  - name: "Update httpd listen port 80 -> 8080"
+    lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      # The regexp to look for and the replacement
+      regexp:    "Listen 80"
+      line:      "Listen 8080"
+      state: present
+      backup: yes
+    register: httpd_cfg_update_out
+
+  - name: populate service facts
+    ansible.builtin.service_facts:
+
+  - name: enable services on boot
+    ansible.builtin.service:
+      name: "{{ item }}"
+      enabled: true
+      state: started
+    when: "item in services"
+    with_items: '{{ services_on_boot }}'
+
+
+  - name: "Check if a reboot is required"
+    ansible.builtin.command: "needs-restarting -r"
+    register: reg_reboot_required
+    ignore_errors: yes
+    failed_when: false
+    changed_when: reg_reboot_required.rc != 0
+    notify:
+      - "Reboot_server"
+
+  handlers:
+### Running this playbook locally, reboot would mean disconnecting the ansible session
+#  - name: "Reboot_server"
+#    ansible.builtin.reboot:
+#      msg: "Reboot initiated by Ansible after OS update"
+#      reboot_timeout: 3600
+#      test_command: uptime
+
+  - name: "Reboot_server"
+    debug:
+      msg: "Reboot is required"
