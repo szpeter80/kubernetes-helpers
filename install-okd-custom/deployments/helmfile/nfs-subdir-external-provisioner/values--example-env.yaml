@@ -1,0 +1,13 @@
+replicaCount: 1
+
+nfs:
+  server: 1.2.3.4
+  path: /exported/mycluster
+  mountOptions:
+    - hard
+
+storageClass:
+  name: nfs-default
+  defaultClass: true
+  provisionerName: nfs-subdir-external-provisioner--default
+

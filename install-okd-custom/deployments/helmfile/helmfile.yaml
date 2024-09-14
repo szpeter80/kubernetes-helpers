@@ -1,0 +1,55 @@
+environments:
+  example-env:
+
+---
+
+repositories:
+
+  - name: nfs-subdir-external-provisioner
+    url: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+  - name: kubernetes-dashboard
+    url: https://kubernetes.github.io/dashboard/
+ 
+helmDefaults:
+  atomic: true
+  cleanupOnFail: true
+
+
+templates:
+  default:
+    namespace: "{{`{{ .Release.Name }}`}}"
+    values:
+      - "./{{`{{ .Release.Name }}`}}/values--{{ .Environment.Name }}.yaml"
+    missingFileHandler: Error
+    hooks:
+      - events: ["presync"]
+        showlogs: true
+        command: "kubectl"
+        args:
+          - "apply"
+          - "-f"
+          - "./{{`{{ .Release.Name }}`}}/custom_resources/"
+      - events: ["postuninstall"]
+        showlogs: true
+        command: "kubectl"
+        args:
+          - "delete"
+          - "-f"
+          - "./{{`{{ .Release.Name }}`}}/custom_resources/"
+
+releases:
+
+  # https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/charts/nfs-subdir-external-provisioner/README.md
+  - name: nfs-subdir-external-provisioner
+    inherit:
+      - template: default
+    chart: nfs-subdir-external-provisioner/nfs-subdir-external-provisioner
+    version: 4.0.18
+  # dashboard
+  - name: kube-dashboard
+    inherit:
+      - template: default
+    chart: kubernetes-dashboard/kubernetes-dashboard
+    version: 7.3.2
+    installed: true
+
