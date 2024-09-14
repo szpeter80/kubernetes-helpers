@@ -1,0 +1,60 @@
+  vars:
+    services_to_start:
+      - "haproxy.service"
+    timezone: "Europe/Budapest"
+
+  tasks:
+
+    - name: "Update all packages"
+      ansible.builtin.dnf:
+        name: "*"
+        state: latest
+        update_cache: yes
+
+    - name: "Install packages"
+      ansible.builtin.dnf:
+
+        name:
+          - bind-utils        # DNS troubleshooting
+          - httpd             # HTTP service, Serve install configs
+          - haproxy           # Reverse proxy, eg cluster api requests
+          - net-tools         # Network troubleshooting
+          - nc                # Network troubleshooting
+          - mc
+          - jq                # CLI json handling
+        state: present
+
+    - name: "Set timezone"
+      community.general.timezone:
+        name: "{{ timezone }}"
+
+    - name: "Populate facts with local service status"
+      ansible.builtin.service_facts:
+
+    - name: "Enable services"
+      ansible.builtin.service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      when: "item in services"
+      with_items: "{{ services_to_start }}"
+
+    - name: "Update haproxy config"
+      ansible.builtin.copy:
+        src:    httpd/
+        dest:   /etc/haproxy
+        backup: yes
+      register: haproxy_cfg_update__output
+      notify:   "Restart haproxy"
+
+
+  handlers:
+    - name: "Reboot_server"
+      debug:
+        msg: "Reboot is required, but it is a bad ide to reboot the local machine in the middle of a playbook run"
+
+    - name: "Restart haproxy"
+      ansible.builtin.service:
+        name: "haproxy"
+        state: restarted
+
