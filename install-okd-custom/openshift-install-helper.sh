@@ -1,68 +1,28 @@
 #!/bin/bash
 
 ###
-### OKD UPI ( "any-platform" ) install helper script
+### OpenShift UPI ( "any-platform" ) install helper script
 ###
 ### Legal: "Red Hat Core OS", and "OpenShift" is a trademark of Red Hat.
 ### This tool is not provided by, endorsed by, or supported by Red Hat.
 ### The trademark is used for identification and reference purposes only.
-###
-### This script should be invoked when pwd == 'install'
+
+#VERSION=latest-4.14 | stable-4.14 | 4.14.9
+VERSION=latest-4.16
+
+# ARCH=aarch64 | x86_64
+ARCH=x86_64
 
 
-if [ -f ../../../install-okd-custom.env ];
-then
-    # shellcheck disable=SC1091
-    source ../../../install-okd-custom.env
-fi
-
-if [ "${DEBUG}" = "1" ];
-then
-    set -x
-fi
-
-#VERSION=4.15.0-0.okd-2024-03-10-010116
-VERSION=4.15.0-0.okd-2024-03-10-010116
-
-#CLIENT_ARCH=linux | linux-arm64
-CLIENT_ARCH=linux
 
 
-if [ ! -f ./install-config.yaml.orig ];
-then
-    echo "No install-config.yaml.orig was found in the current directory, exiting."
+if [[ "$1" == "--client-download" ]]; then
+    echo -e "\n\nDownloading installer and client binaries... \n"
+    curl -k https://mirror.openshift.com/pub/openshift-v4/clients/ocp/$PLATFORM_VERSION/openshift-install-linux.tar.gz -o openshift-install-linux.tar.gz
+    curl -k https://mirror.openshift.com/pub/openshift-v4/clients/ocp/$PLATFORM_VERSION/openshift-client-linux.tar.gz -o openshift-client-linux.tar.gz
     exit 1
+
 fi
-
-if [ ! -d ../bin ];
-then
-    echo "The ../bin directory was not found, please use the provided template."
-    exit 1
-fi
-
-if [ ! -f ../bin/openshift-install ]
-then
-    OKD_INSTALLER_ARCHIVE="../bin/okd-install.tar.gz"
-
-    echo -n "Downloading installer ... "
-    curl --location --silent -k https://github.com/okd-project/okd/releases/download/${VERSION}/openshift-install-linux-${VERSION}.tar.gz -o "${OKD_INSTALLER_ARCHIVE}"
-    tar -xzf "${OKD_INSTALLER_ARCHIVE}" --directory="$(dirname ${OKD_INSTALLER_ARCHIVE})" && rm -f "${OKD_INSTALLER_ARCHIVE}"
-    echo "done"
-fi
-
-if [ ! -f ../bin/oc ]
-then
-    OKD_CLIENT_ARCHIVE="../bin/okd-client.tar.gz"
-
-    echo -n "Downloading client ... "
-    curl --location --silent -k https://github.com/okd-project/okd/releases/download/${VERSION}/openshift-client-linux-${VERSION}.tar.gz -o "${OKD_CLIENT_ARCHIVE}"
-    tar -xzf "${OKD_CLIENT_ARCHIVE}"  --directory="$(dirname ${OKD_CLIENT_ARCHIVE})" && rm -f "${OKD_CLIENT_ARCHIVE}"
-    echo "done"
-fi
-
-
-exit 0
-
 
 ISO_PREFIX="installer"
 OPENSHIFT_INSTALL="$(which openshift-install)"
@@ -117,9 +77,11 @@ fi
 #
 # https://coreos.github.io/coreos-installer/getting-started/#run-from-a-container
 # https://coreos.github.io/coreos-installer/customizing-install/
+# https://docs.openshift.com/container-platform/4.14/installing/installing_sno/install-sno-installing-sno.html#install-sno-installing-sno-manually
 
 # Prerequisites: current directory need to contain original rhcos image and also the .ign files
-# Paths outside of current dir wont work due to coreos-installer is run from a container
+# Paths outside of current dir wont work due to the way the current directory is mapped to the coreos
+# container image in the Podman run
 
 # Example: add a static ip configuration to the kernel arguments (alternative to set it in the ignition config)
 # coreos-installer iso kargs modify -a ip=10.1.5.1::10.0.0.1:255.0.0.0:openshift-okd::none:10.1.1.1 rhcos.iso
@@ -129,25 +91,47 @@ if [ ! -f "./${RHCOS_FN}" ]; then
     curl  "${RHCOS_URL}" --output "${RHCOS_FN}"
 fi
 
-sudo ${COREOS_INSTALLER}                                   \
-    iso  customize                                         \
-    --dest-device=/dev/sda                                 \
-    --dest-ignition bootstrap.ign                          \
-    -o "${ISO_PREFIX}-bootstrap.iso"                       \
+if [[ "${INSTALL_MODE}" == "singlenode" ]]; then
+
+# Single Node Openshift installs differently than multinode
+# "iso customize" does not work, probably because it interferes
+# with the bootstrap process, as that invokes 'coreos-installer' directly
+# from a script deployed from the in-place ignition file, with
+# parameters for ignition files to use and also setting explicitly
+# the destination device on the command line
+
+    sudo ${COREOS_INSTALLER}                                   \
+    iso  ignition embed                                        \
+    --force                                                    \
+    --ignition-file bootstrap-in-place-for-live-iso.ign        \
+    -o "${ISO_PREFIX}-bootstrap-in-place.iso"                  \
     ${RHCOS_FN}
 
-sudo ${COREOS_INSTALLER}                                   \
-    iso  customize                                         \
-    --dest-device=/dev/sda                                 \
-    --dest-ignition master.ign                             \
-    -o "${ISO_PREFIX}-master.iso"                          \
+else
+
+    sudo ${COREOS_INSTALLER}                                   \
+    iso  customize                                             \
+    --dest-device=/dev/sda                                     \
+    --dest-ignition bootstrap.ign                              \
+    -o "${ISO_PREFIX}-bootstrap.iso"                           \
     ${RHCOS_FN}
 
-sudo ${COREOS_INSTALLER}                                   \
-    iso  customize                                         \
-    --dest-device=/dev/sda                                 \
-    --dest-ignition worker.ign                             \
-    -o "${ISO_PREFIX}-worker.iso"                          \
+    sudo ${COREOS_INSTALLER}                                   \
+    iso  customize                                             \
+    --dest-device=/dev/sda                                     \
+    --dest-ignition master.ign                                 \
+    -o "${ISO_PREFIX}-master.iso"                              \
+    ${RHCOS_FN}
+
+fi
+
+# Worker iso generated the same for all installations
+
+    sudo ${COREOS_INSTALLER}                                   \
+    iso  customize                                             \
+    --dest-device=/dev/sda                                     \
+    --dest-ignition worker.ign                                 \
+    -o "${ISO_PREFIX}-worker.iso"                              \
     ${RHCOS_FN}
 
 mv ./${RHCOS_FN} ..

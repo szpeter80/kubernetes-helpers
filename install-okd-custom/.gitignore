@@ -1,2 +1,5 @@
 .venv
 install-config.yaml.orig
+clusters/*
+!clusters/sample/
+clusters/sample/bin/*
