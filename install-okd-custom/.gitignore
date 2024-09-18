@@ -1,5 +1,12 @@
 .venv
 install-config.yaml.orig
+*.iso
 clusters/*
 !clusters/sample/
 clusters/sample/bin/*
+clusters/sample/install/auth
+clusters/sample/install/manifests.orig
+clusters/sample/install/openshift.orig
+clusters/sample/install/*.log
+clusters/sample/install/*.ign
+clusters/sample/install/*.json

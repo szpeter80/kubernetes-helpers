@@ -1,0 +1,96 @@
+# Image: docker.io/library/haproxy:3.0.4-alpine
+# Map this file to /usr/local/etc/haproxy/haproxy.cfg 
+#
+# Source: https://docs.okd.io/latest/installing/installing_platform_agnostic/installing-platform-agnostic.html#installation-load-balancing-user-infra_installing-platform-agnostic
+#
+# Listen ports are chosen as not to require the container to bind to any port below 1024
+# Do not forget to map/forward the 'listen' ports (for ingress you need 80/443 to mapped to 8080/8443)
+#
+# Mind the host firewall and SeLinux / AppArmor 
+
+
+# Global settings
+#---------------------------------------------------------------------
+global
+    maxconn     4000
+    log         /dev/log local2 info
+    user        haproxy
+    group       haproxy 
+    daemon
+
+#---------------------------------------------------------------------
+# common defaults that all the 'listen' and 'backend' sections will
+# use if not designated in their block
+#---------------------------------------------------------------------
+defaults
+    mode                    http
+    log                     global
+    option                  httplog
+    option                  dontlognull
+    option                  http-server-close
+    option                  forwardfor except 127.0.0.0/8
+    option                  redispatch
+    retries                 3
+    timeout http-request    10s
+    timeout queue           1m
+    timeout connect         10s
+    timeout client          1m
+    timeout server          1m
+    timeout http-keep-alive 10s
+    timeout check           10s
+    maxconn                 3000
+
+# mind the security if you uncomment this
+#listen stats
+#    bind :7000
+#    mode http
+#    stats enable
+#    stats uri /
+#    stats refresh 10s
+#    stats admin if TRUE
+
+listen okd_ja5_lan__api
+    bind :6443
+    mode tcp
+    option tcplog
+    option  httpchk GET /readyz HTTP/1.0
+    option  log-health-checks
+    balance roundrobin
+
+    server  bootstrap  bootstrap.cluster.example.com:6443  verify none check check-ssl inter 10s fall 2 rise 3 backup
+
+    server  master1    master1.cluster.example.com:6443    weight 1 verify none check check-ssl inter 10s fall 2 rise 3
+    server  master2    master2.cluster.example.com:6443    weight 1 verify none check check-ssl inter 10s fall 2 rise 3
+    server  master3    master3.cluster.example.com:6443    weight 1 verify none check check-ssl inter 10s fall 2 rise 3
+
+listen okd_ja5_lan__machine_config_server
+    bind :22623
+    mode tcp
+    option tcplog
+    balance roundrobin
+
+    server  bootstrap bootstrap.cluster.example.com:22623 check inter 1s backup
+
+    server  master1 master1.cluster.example.com:22623 check inter 1s
+    server  master2 master2.cluster.example.com:22623 check inter 1s
+    server  master3 master3.cluster.example.com:22623 check inter 1s
+
+listen okd_ja5_lan__http_ingress
+    bind :8080
+    mode tcp
+    option tcplog
+    balance source
+
+    server      master1 master1.cluster.example.com:80 check inter 1s
+    server      master2 master2.cluster.example.com:80 check inter 1s
+    server      master3 master3.cluster.example.com:80 check inter 1s
+
+listen okd_ja5_lan__https_ingress
+    bind :8443
+    mode tcp
+    option tcplog
+    balance source
+
+    server      master1 master1.cluster.example.com:443 check inter 1s
+    server      master2 master2.cluster.example.com:443 check inter 1s
+    server      master3 master3.cluster.example.com:443 check inter 1s

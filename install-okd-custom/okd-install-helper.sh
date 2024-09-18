@@ -1,5 +1,7 @@
 #!/bin/bash
 
+### This script should be invoked when pwd == 'install'
+
 ###
 ### OKD UPI ( "any-platform" ) install helper script
 ###
@@ -7,26 +9,24 @@
 ### This tool is not provided by, endorsed by, or supported by Red Hat.
 ### The trademark is used for identification and reference purposes only.
 ###
-### This script should be invoked when pwd == 'install'
 
 
-if [ -f ../../../install-okd-custom.env ];
+if [ ! -f ../../../install-okd-custom.env ];
 then
-    # shellcheck disable=SC1091
-    source ../../../install-okd-custom.env
+    echo "Script configuration not found, exiting"
+    exit 1
 fi
+
+#shellcheck source=install-okd-custom.env
+source ../../../install-okd-custom.env
+
+OKD_INSTALLER="../bin/openshift-install"
+OKD_CLIENT="../bin/oc"
 
 if [ "${DEBUG}" = "1" ];
 then
     set -x
 fi
-
-#VERSION=4.15.0-0.okd-2024-03-10-010116
-VERSION=4.15.0-0.okd-2024-03-10-010116
-
-#CLIENT_ARCH=linux | linux-arm64
-CLIENT_ARCH=linux
-
 
 if [ ! -f ./install-config.yaml.orig ];
 then
@@ -36,11 +36,11 @@ fi
 
 if [ ! -d ../bin ];
 then
-    echo "The ../bin directory was not found, please use the provided template."
+    echo "The ../bin directory was not found, please use the provided cluster directory template."
     exit 1
 fi
 
-if [ ! -f ../bin/openshift-install ]
+if [ ! -f "${OKD_INSTALLER}" ]
 then
     OKD_INSTALLER_ARCHIVE="../bin/okd-install.tar.gz"
 
@@ -50,7 +50,7 @@ then
     echo "done"
 fi
 
-if [ ! -f ../bin/oc ]
+if [ ! -f "${OKD_CLIENT}" ]
 then
     OKD_CLIENT_ARCHIVE="../bin/okd-client.tar.gz"
 
@@ -60,55 +60,35 @@ then
     echo "done"
 fi
 
-
-exit 0
-
-
-ISO_PREFIX="installer"
-OPENSHIFT_INSTALL="$(which openshift-install)"
-#OPENSHIFT_INSTALL="./openshift-install"
-
-# Possible values: "singlenode" | anything else. 
-# The "singlenode" creates ISO for a single-node Openshift, 
-# any other option will create ISO-s for multinode / HA installation
-INSTALL_MODE="normal"
-
-ISO_DESTDIR="/usr/share/nginx/html/iso/"
-ISO_CHCON_REF="/usr/share/nginx/html/index.html"
-ISO_WEBLINK="http://webserver/iso"
-
-#TMP=$( "${OPENSHIFT_INSTALL}" coreos print-stream-json | grep '\.iso[^.]' | grep x86_64)
-
-RHCOS_URL=$( ${OPENSHIFT_INSTALL} coreos print-stream-json | jq --raw-output '.architectures.x86_64.artifacts.metal.formats.iso.disk.location')
-RHCOS_FN=$(basename "${RHCOS_URL}")
-
-if [[ "$1" != "--force" ]]; then
-    echo -e "\nInstall artifacts will be created is the current directory: $(pwd)"
-    echo "ISO prefix: ${ISO_PREFIX}"
-    echo "Install mode: ${INSTALL_MODE}"
-    echo -e "Openshift installer: \n"
-    "${OPENSHIFT_INSTALL}" version
-
-    echo -e "\n\nPlease provide the '--force' option to proceed.\n"
-    exit 1
-fi
+COREOS_ISO_URL=$( ${OKD_INSTALLER} coreos print-stream-json | jq --raw-output '.architectures.x86_64.artifacts.metal.formats.iso.disk.location')
+COREOS_ISO_FN=$(basename "${COREOS_ISO_URL}")
 
 
-COREOS_INSTALLER='podman run --pull=always --privileged --rm -v /dev:/dev -v /run/udev:/run/udev -v .:/data -w /data quay.io/coreos/coreos-installer:release'
+echo -e "\nInstall artifacts will be created is the current directory: $(pwd)"
+echo "ISO prefix: ${ISO_PREFIX}"
+echo "Install mode: ${INSTALL_MODE}"
+echo -e "OKD installer version: \n" && "${OKD_INSTALLER}" version
 
+echo -e "\nThis is your last chance to stop installation. Press CTRL+C to abort or any key to proceed... \n"
+# shellcheck disable=SC2162
+# shellcheck disable=SC2034
+read dummy
 
+COREOS_INSTALLER="podman run ${COREOS_INSTALLER_ARGS} --privileged --rm -v /dev:/dev -v /run/udev:/run/udev -v .:/data -w /data quay.io/coreos/coreos-installer:release"
 
-echo "--------------------------- OpenShift install start -----------------------"
+echo "--------------------------- Cluster install start -----------------------"
+
 cp install-config.yaml.orig install-config.yaml
 
-"${OPENSHIFT_INSTALL}"  create manifests --dir=.
+"${OKD_INSTALLER}"  create manifests --dir=.
+
 cp -r manifests manifests.orig
 cp -r openshift openshift.orig
 
 if [[ "${INSTALL_MODE}" == "singlenode" ]]; then
-    "${OPENSHIFT_INSTALL}"  create single-node-ignition-config --dir=.
+    "${OKD_INSTALLER}"  create single-node-ignition-config --dir=.
 else
-    "${OPENSHIFT_INSTALL}"  create ignition-configs --dir=.
+    "${OKD_INSTALLER}"  create ignition-configs --dir=.
 fi
 
 
@@ -118,52 +98,75 @@ fi
 # https://coreos.github.io/coreos-installer/getting-started/#run-from-a-container
 # https://coreos.github.io/coreos-installer/customizing-install/
 
-# Prerequisites: current directory need to contain original rhcos image and also the .ign files
+# Prerequisites: current directory need to contain original coreos image and also the .ign files
 # Paths outside of current dir wont work due to coreos-installer is run from a container
 
 # Example: add a static ip configuration to the kernel arguments (alternative to set it in the ignition config)
-# coreos-installer iso kargs modify -a ip=10.1.5.1::10.0.0.1:255.0.0.0:openshift-okd::none:10.1.1.1 rhcos.iso
+# coreos-installer iso kargs modify -a ip=10.1.5.1::10.0.0.1:255.0.0.0:openshift-okd::none:10.1.1.1 coreos.iso
 
 
-if [ ! -f "./${RHCOS_FN}" ]; then
-    curl  "${RHCOS_URL}" --output "${RHCOS_FN}"
+if [ ! -f "./${COREOS_ISO_FN}" ]; then
+    curl --location "${COREOS_ISO_URL}" --output "${COREOS_ISO_FN}"
 fi
 
+CURRENT_USER="$(whoami)"
+
+# Due to privileged mounts, we need sudo
+
+# shellcheck disable=SC2086
 sudo ${COREOS_INSTALLER}                                   \
     iso  customize                                         \
-    --dest-device=/dev/sda                                 \
+    --dest-device="${NODE_DISK_PATH_BOOTSTRAP}"            \
     --dest-ignition bootstrap.ign                          \
     -o "${ISO_PREFIX}-bootstrap.iso"                       \
-    ${RHCOS_FN}
+    "${COREOS_ISO_FN}"
 
+# shellcheck disable=SC2086
 sudo ${COREOS_INSTALLER}                                   \
     iso  customize                                         \
-    --dest-device=/dev/sda                                 \
+    --dest-device="${NODE_DISK_PATH_MASTER}"               \
     --dest-ignition master.ign                             \
     -o "${ISO_PREFIX}-master.iso"                          \
-    ${RHCOS_FN}
+    "${COREOS_ISO_FN}"
 
+# shellcheck disable=SC2086
 sudo ${COREOS_INSTALLER}                                   \
     iso  customize                                         \
-    --dest-device=/dev/sda                                 \
+    --dest-device="${NODE_DISK_PATH_WORKER}"               \
     --dest-ignition worker.ign                             \
     -o "${ISO_PREFIX}-worker.iso"                          \
-    ${RHCOS_FN}
+    "${COREOS_ISO_FN}"
 
-mv ./${RHCOS_FN} ..
+sudo chown "${CURRENT_USER}:" ./*.iso
+chmod a+r ./*.iso
 
-sudo chmod a+r ./*.iso
+mv "${COREOS_ISO_FN}" ..
 
-sudo mv ./*.iso "${ISO_DESTDIR}/"
-sudo chcon --reference "${ISO_CHCON_REF}" "${ISO_DESTDIR}"/*.iso
+if [ "${ISO_DESTDIR}" != "." ];
+then
+    mv ./*.iso "${ISO_DESTDIR}/"
+fi
 
-echo "Access ISO files here: ${ISO_WEBLINK}"
+if [ -n "${ISO_CHCON_REF}" ];
+then
+    sudo chcon --reference "${ISO_CHCON_REF}" "${ISO_DESTDIR}"/*.iso
+fi
 
-"${OPENSHIFT_INSTALL}"  --dir=. wait-for bootstrap-complete
+mv ../"${COREOS_ISO_FN}" .
 
-echo "You might get the message 'error: x509 certificate signed by unknown authority when logging in'"
-echo "It means the host running oc / kubectl does not trust a given CA"
-echo "You can not solve this by disabling TLS verification, because that is valid only for the original URL, but there is a redirect to the OAuth operator after"
-echo "API server issuer CA is included in the kubeconfig but OAuth has a different issuer and that is not included."
-echo "You can get the CA which is used by the OAuth server if you check its pods definition in the openshift-authentication namespace"
-echo "Don't forget to copy the cluster ingress controller certificate to /etc/pki/ca-trust/source/anchors/ and run 'update-ca-trust' after"
+cat <<EOF
+You might get the message
+
+'error: x509 certificate signed by unknown authority when logging in'
+
+It means the management host running oc / kubectl does not trust the OAuth's CA
+OAuth's CA is not the same as the API server's CA which is bundled in the initial kubeconfig
+
+You can get the OAuth's CA by checking its Pods definition (mounts) in the 'openshift-authentication' namespace
+
+On RHEL systems you can add a CA by copying the certificate to /etc/pki/ca-trust/source/anchors/ 
+and running 'update-ca-trust'
+
+EOF
+
+"${OKD_INSTALLER}"  --dir=. wait-for bootstrap-complete
