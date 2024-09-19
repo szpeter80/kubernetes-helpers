@@ -171,4 +171,4 @@ and running 'update-ca-trust'
 
 EOF
 
-"${OKD_INSTALLER}"  --dir=. wait-for bootstrap-complete
+"${OKD_INSTALLER}"  --dir=. wait-for install-complete
