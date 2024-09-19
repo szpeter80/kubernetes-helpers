@@ -8,6 +8,7 @@ I_CPU_ARCH='amd64'
 if [ -f "./install-kubectl.env" ];
 then
     echo "Applying variables override"
+    # shellcheck source=install-kubectl.env.example
     . "./install-kubectl.env"
 fi
 
@@ -21,7 +22,7 @@ then
 fi
 
 echo "Creating destination directory: ${DST_DIR}"
-mkdir -p ${DST_DIR}
+mkdir -p "${DST_DIR}"
 
 # Ask Curl to follow redirects and use the remote filename as local filename
 curl --location --remote-name  \
@@ -34,6 +35,8 @@ then
     exit 1
 fi
 
+"${DST_DIR}/kubectl" completion bash > "${DST_DIR}/kubectl_completion_bash"
+
 chown root:root "${DST_DIR}/kubectl"
 chmod 755 "${DST_DIR}/kubectl"
 
@@ -44,4 +47,9 @@ then
     ln -s  "${DST_DIR}/kubectl"  "${I_KUBECTL_DIR}/../kubectl"
 fi
 
-
+if [[ ! -f "${I_KUBECTL_DIR}/../kubectl_completion_bash" || -L "${I_KUBECTL_DIR}/../kubectl_completion_bash" ]];
+then
+    echo "Updating symlink for kubectl:  ${I_KUBECTL_DIR}/../kubectl_completion_bash --> ${DST_DIR}/kubectl_completion_bash"
+    rm -f "${I_KUBECTL_DIR}/../kubectl_completion_bash"
+    ln -s  "${DST_DIR}/kubectl_completion_bash"  "${I_KUBECTL_DIR}/../kubectl_completion_bash"
+fi
