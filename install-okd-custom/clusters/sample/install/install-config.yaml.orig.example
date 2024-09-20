@@ -1,0 +1,50 @@
+# https://docs.okd.io/latest/installing/installing_platform_agnostic/installing-platform-agnostic.html#installation-initializing-manual_installing-platform-agnostic
+apiVersion: v1
+
+baseDomain: example.com
+
+# This will be the "cluster name"
+metadata:
+  name: okd
+
+# You will end up using domain names like
+#
+# worker1.<cluster-name>.<base-domain>
+# api.<cluster-name>.<base-domain>
+# *.apps.<cluster-name>.<base-domain>
+
+compute: 
+- hyperthreading: Enabled 
+  name: worker
+  replicas: 0 
+
+controlPlane: 
+  hyperthreading: Enabled 
+  name: master
+  replicas: 3
+
+networking:
+  networkType: OVNKubernetes
+
+  # Network subnet for Pods
+  clusterNetwork:
+  - cidr: 10.120.0.0/16
+    # The portion which will be handed out to a given node
+    hostPrefix: 20 
+  serviceNetwork: 
+  - 10.121.0.0/16
+
+# This is for single node install
+# The device path is whatever CoreOS calls your OS disk
+#BootstrapInPlace:
+#  InstallationDisk: /dev/nvme0n1
+
+platform:
+  none: {}
+  
+pullSecret: '{"auths":{"fake":{"auth":"aWQ6cGFzcwo="}}}'
+
+# This will be the key you can use to ssh core@node.example.com
+# If you omit this, you will not be able to log in to the nodes
+# There is no password set and "core" is the only non-root user.
+sshKey: 'your ssh key as in known_hosts'
