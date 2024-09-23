@@ -4,6 +4,7 @@ install-config.yaml.orig
 clusters/*
 !clusters/sample/
 clusters/sample/bin/*
+!clusters/sample/bin/readme.txt
 clusters/sample/install/auth
 clusters/sample/install/manifests.orig
 clusters/sample/install/openshift.orig
