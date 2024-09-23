@@ -49,7 +49,7 @@ defaults
 #    stats refresh 10s
 #    stats admin if TRUE
 
-listen okd_ja5_lan__api
+listen cluster_example_com__api
     bind :6443
     mode tcp
     option tcplog
@@ -63,7 +63,7 @@ listen okd_ja5_lan__api
     server  master2    master2.cluster.example.com:6443    weight 1 verify none check check-ssl inter 10s fall 2 rise 3
     server  master3    master3.cluster.example.com:6443    weight 1 verify none check check-ssl inter 10s fall 2 rise 3
 
-listen okd_ja5_lan__machine_config_server
+listen cluster_example_com__machine_config_server
     bind :22623
     mode tcp
     option tcplog
@@ -75,7 +75,7 @@ listen okd_ja5_lan__machine_config_server
     server  master2 master2.cluster.example.com:22623 check inter 1s
     server  master3 master3.cluster.example.com:22623 check inter 1s
 
-listen okd_ja5_lan__http_ingress
+listen cluster_example_com__http_ingress
     bind :8080
     mode tcp
     option tcplog
@@ -85,7 +85,7 @@ listen okd_ja5_lan__http_ingress
     server      master2 master2.cluster.example.com:80 check inter 1s
     server      master3 master3.cluster.example.com:80 check inter 1s
 
-listen okd_ja5_lan__https_ingress
+listen cluster_example_com__https_ingress
     bind :8443
     mode tcp
     option tcplog
