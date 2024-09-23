@@ -31,8 +31,15 @@ networking:
   - cidr: 10.120.0.0/16
     # The portion which will be handed out to a given node
     hostPrefix: 20 
+
+  # Network subnet for Services
   serviceNetwork: 
   - 10.121.0.0/16
+
+  # Must match with host machine network / node's "real" ethernet subnet
+  machineNetwork:
+  - cidr: 192.168.1.0/24
+
 
 # This is for single node install
 # The device path is whatever CoreOS calls your OS disk
