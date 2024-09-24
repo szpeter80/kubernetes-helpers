@@ -1,0 +1,1 @@
+../../../12-okd-install-helper.sh
