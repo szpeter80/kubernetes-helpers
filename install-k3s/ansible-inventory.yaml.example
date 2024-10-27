@@ -1,0 +1,24 @@
+all:
+  vars:
+    ansible_ssh_private_key_file: <generate a dedicated key for cluster node ssh>
+    ansible_user: root
+    ansible_python_interpreter: /usr/bin/python3
+  hosts:
+    node1:
+      ansible_host: 1.2.3.1
+    node2:
+      ansible_host: 1.2.3.2
+    node3:
+      ansible_host: 1.2.3.3
+    node4:
+      ansible_host: 1.2.3.4
+
+g-control-plane:
+  hosts:
+    node1:
+
+g-workers:
+  hosts:
+    node2:
+    node3:
+    node4:
