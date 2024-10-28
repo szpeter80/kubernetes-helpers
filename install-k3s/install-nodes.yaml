@@ -6,17 +6,18 @@
 
   vars:
     system_services:
-      - "rpcbind.service"
-      - "docker.service"
+      - "rpcbind.service"     # NFS 
+# Latest K3s does not need docker
+#      - "docker.service"
 
 
   tasks:
     - name: "Populate facts"
       ansible.builtin.service_facts:
 
-  #  - name: "Set timezone"
-  #    community.general.timezone:
-  #      name: "Europe/Budapest"
+#    - name: "Set timezone"
+#      community.general.timezone:
+#        name: "Europe/Budapest"
 
 
     - name: "Install packages"
@@ -33,8 +34,8 @@
           - pwgen             # Security: password generation
           - libnfs-utils      # NFS client utilities
           - nfs-common        # NFS client utilities
-
-          - docker.io         # Kubernetes container runtime on Debian based distros
+# Latest K3s does not need docker
+#          - docker.io         # Kubernetes container runtime on Debian based distros
         state: present
 
     - name: "Enable and start services"

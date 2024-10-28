@@ -1,6 +1,6 @@
 all:
   vars:
-    ansible_ssh_private_key_file: <generate a dedicated key for cluster node ssh>
+    ansible_ssh_private_key_file: remoteadmin_rootlogin_key
     ansible_user: root
     ansible_python_interpreter: /usr/bin/python3
   hosts:

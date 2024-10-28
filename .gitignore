@@ -1,0 +1,8 @@
+.venv
+ansible-inventory.yaml
+ansible-log.txt
+remoteadmin_rootlogin_key
+remoteadmin_rootlogin_key.pub
+
+node-token
+k3s.yaml
