@@ -23,10 +23,15 @@ fi
 
 ###############################################################################
 
-
 # shellcheck disable=SC1091
 . "${VENV_DIR}"/bin/activate
 
+
+if [ ! -f "$ANSIBLE_SSH_KEY" ];
+then
+  echo "Ansible SSH key file ($ANSIBLE_SSH_KEY) not found, did you forget to create ?"
+  exit 1
+fi
 
 ansible -i ./ansible-inventory.yaml -m shell -a 'curl -sfL https://get.k3s.io | sh -' g_controlplane -vv
 ansible -i ./ansible-inventory.yaml -m fetch -a "src=/var/lib/rancher/k3s/server/node-token dest=./node-token flat=yes" g_controlplane -vv

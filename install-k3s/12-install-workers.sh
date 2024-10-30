@@ -45,10 +45,13 @@ if [ $? -ne 0 ]; then
 fi
 
 
+
 if [ ! -f "$ANSIBLE_SSH_KEY" ];
 then
   echo "Ansible SSH key file ($ANSIBLE_SSH_KEY) not found, did you forget to create ?"
+  exit 1
 fi
+
 
 ansible -i ./ansible-inventory.yaml -m file -a "state=directory path=~/.kube mode=0755" all -vv
 ansible -i ./ansible-inventory.yaml -m copy -a "src=./k3s.yaml dest=~/.kube/config" all -vv
