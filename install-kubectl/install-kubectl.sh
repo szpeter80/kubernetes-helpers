@@ -35,10 +35,10 @@ then
     exit 1
 fi
 
-"${DST_DIR}/kubectl" completion bash > "${DST_DIR}/kubectl_completion_bash"
-
 chown root:root "${DST_DIR}/kubectl"
 chmod 755 "${DST_DIR}/kubectl"
+
+"${DST_DIR}/kubectl" completion bash > "${DST_DIR}/kubectl_completion_bash"
 
 if [[ ! -f "${I_KUBECTL_DIR}/../kubectl" || -L "${I_KUBECTL_DIR}/../kubectl" ]];
 then
