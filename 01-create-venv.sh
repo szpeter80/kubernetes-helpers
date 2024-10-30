@@ -31,7 +31,7 @@ then
     exit 0
 fi
 
-python -m venv "${VENV_DIR}"
+$PYTHON_EXECUTABLE_PATH -m venv "${VENV_DIR}"
 # shellcheck disable=SC1091
 . "${VENV_DIR}"/bin/activate
 

@@ -1,6 +1,11 @@
+custom.env
+
 .venv
+
 ansible-inventory.yaml
 ansible-log.txt
+ansible.cfg
+
 remoteadmin_rootlogin_key
 remoteadmin_rootlogin_key.pub
 
