@@ -20,3 +20,8 @@ Steps:
 1. If default python is old, set the path to some recent (3.10+) python in your custom.env
 1. Run shell scripts in order (first parameter to script is envfile, eg custom.env )
 1. Enjoy your new k3s cluster :D
+
+Official docs:
+
+- <https://docs.k3s.io/>
+- <https://github.com/k3s-io/k3s/releases>
