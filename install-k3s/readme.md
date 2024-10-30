@@ -9,7 +9,7 @@ Key points:
 Steps:
 
 1. Create dedicated admin ssh key for cluster access (remoteadmin_rootlogin_key)
-1. Create the VMs (min: 2CPU / 4G RAM / ? HDD)
+1. Create the VMs (min: 2CPU / 4G RAM / 40G disk)
     1. if vm cloned from template, re-generate ssh server key (delete keys, on Debian run dpkg-reconfigure openssh-server)
     1. enable sshd and ssh root login with the admin key on all nodes
     1. enable and activate time sync
