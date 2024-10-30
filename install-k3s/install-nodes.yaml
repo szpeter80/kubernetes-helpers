@@ -26,7 +26,8 @@
         name:
           - apt-file          # Find info about packages
           - dnsutils          # Debug DNS
-          - net-tools         # Debug network, eg ping
+          - net-tools         # Debug network, netstat / route / arp / ifconfig
+          - inetutils-ping    # Debug network, ping
           - netcat-openbsd    # Debug network, tcp
           - nmap              # Debug network, scan
           - ntpsec            # Debug NTP 
