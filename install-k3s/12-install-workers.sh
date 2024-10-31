@@ -31,8 +31,9 @@ fi
 K3S_TOKEN="$(cat ./node-token)"
 K3S_URL="$(grep server <./k3s.yaml | cut -d ':' -f 2- | tr -d '[:blank:]')"
 
-# shellcheck disable=SC2034
-KUBECONFIG='./k3s.yaml' kubectl get nodes
+export KUBECONFIG='./k3s.yaml'
+
+ kubectl get nodes
 
 # shellcheck disable=SC2181
 if [ $? -ne 0 ]; then
