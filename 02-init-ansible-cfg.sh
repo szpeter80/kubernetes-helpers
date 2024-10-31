@@ -28,7 +28,9 @@ fi
 # shellcheck disable=SC1091
 . "${VENV_DIR}"/bin/activate
 
-ansible-config init --disabled -t all >ansible.cfg
-echo 'log_path=ansible-log.txt' >>ansible.cfg
+#ansible-config init --disabled -t all >ansible.cfg
+echo > ansible.cfg
+echo '[defaults]' >> ansible.cfg
+echo 'log_path=ansible-log.txt' >> ansible.cfg
 
 deactivate
