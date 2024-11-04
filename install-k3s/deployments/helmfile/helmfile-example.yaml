@@ -1,6 +1,12 @@
 environments:
   example-env:
 
+# You must provide a custom values file called values--example-env.yaml
+# As a start you can get the char's default values with by executing 
+#
+# helm show values helm-repo/chart-name > values--example-env.yaml
+#
+
 ---
 
 repositories:
@@ -55,6 +61,6 @@ releases:
     inherit:
       - template: default
     chart: kubernetes-dashboard/kubernetes-dashboard
-    version: 7.3.2
+    version: 7.10.0
     installed: false
 
