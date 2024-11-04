@@ -15,3 +15,7 @@ k3s.yaml
 helmfile.yaml
 values*
 !values--example-env*
+
+install-k3s/deployments/helmfile
+!install-k3s/deployments/kube-dashboard
+!install-k3s/deployments/nfs-subdir-external-provisioner
