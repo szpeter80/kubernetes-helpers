@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dashboard-local
+  namespace: kube-dashboard
+  annotations:
+    #"nginx.ingress.kubernetes.io/whitelist-source-range": "0/0"
+    #"nginx.ingress.kubernetes.io/force-ssl-redirect": "true"
+    #"nginx.ingress.kubernetes.io/ssl-passthrough": "true"
+    #"nginx.ingress.kubernetes.io/backend-protocol": "HTTPS"
+    #"nginx.org/ssl-services": "kube-dashboard-kong-proxy"
+spec:
+  tls:
+    - hosts:
+      - dashboard.apps.cluster.lan
+      secretName: my-tls-secret
+
+  rules:
+  - host: dashboard.apps.cluster.lan
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kube-dashboard-kong-proxy
+            port:
+              number: 443

@@ -11,3 +11,7 @@ remoteadmin_rootlogin_key.pub
 
 node-token
 k3s.yaml
+
+helmfile.yaml
+values*
+!values--example-env*
