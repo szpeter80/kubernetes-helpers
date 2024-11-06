@@ -16,7 +16,11 @@ helmfile.yaml
 values*
 !values--example-env*
 
-install-k3s/deployments/helmfile
+# https://stackoverflow.com/questions/5533050/gitignore-exclude-folder-but-include-specific-subfolder
+
+install-k3s/deployments/helmfile/*
 !install-k3s/deployments/helmfile/helmfile-example.yaml
-!install-k3s/deployments/helmfile/kube-dashboard
 !install-k3s/deployments/helmfile/nfs-subdir-external-provisioner
+!install-k3s/deployments/helmfile/longhorn
+!install-k3s/deployments/helmfile/kube-dashboard
+
