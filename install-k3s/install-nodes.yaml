@@ -1,12 +1,12 @@
 ---
 - name: Install Kubernetes nodes
   hosts: all
-  become: yes
+  become: true
 
 
   vars:
     system_services:
-      - "rpcbind.service"     # NFS 
+      - "rpcbind.service"     # NFS
 # Latest K3s does not need docker
 #      - "docker.service"
 
@@ -25,16 +25,19 @@
 
         name:
           - apt-file          # Find info about packages
+          - vim               # Text editor
+          - nano              # Text editor
           - dnsutils          # Debug DNS
           - net-tools         # Debug network, netstat / route / arp / ifconfig
           - inetutils-ping    # Debug network, ping
           - netcat-openbsd    # Debug network, tcp
           - nmap              # Debug network, scan
-          - ntpsec            # Debug NTP 
+          - ntpsec            # Debug NTP
           - jq                # JSON processing
           - pwgen             # Security: password generation
           - libnfs-utils      # NFS client utilities
           - nfs-common        # NFS client utilities
+          - parted            # Block device partitioning for SDS, eg. Longhorn
 # Latest K3s does not need docker
 #          - docker.io         # Kubernetes container runtime on Debian based distros
         state: present
@@ -48,7 +51,7 @@
 
   handlers:
     - name: "Reboot server"
-      debug:
+      ansible.builtin.debug:
         msg: "You should reboot the host"
 
     - name: "Restart systemd"

@@ -1,0 +1,84 @@
+networkPolicies:
+  enabled: false
+
+
+service:
+  ui:
+    # -- Service type for Longhorn UI. (Options: "ClusterIP", "NodePort", "LoadBalancer", "Rancher-Proxy")
+    type: ClusterIP
+  manager:
+    # -- Service type for Longhorn Manager.
+    type: ClusterIP
+
+persistence:
+  defaultClass: true
+  # -- Filesystem type of the default Longhorn StorageClass.
+  defaultFsType: ext4
+  # -- mkfs parameters of the default Longhorn StorageClass.
+  defaultMkfsParams: ""
+  # -- Replica count of the default Longhorn StorageClass.
+  defaultClassReplicaCount: 2
+  # -- Data locality of the default Longhorn StorageClass. (Options: "disabled", "best-effort")
+  defaultDataLocality: best-effort
+  # -- Reclaim policy that provides instructions for handling of a volume after its claim is released. (Options: "Retain", "Delete")
+  reclaimPolicy: Delete
+  # -- Setting that allows you to enable live migration of a Longhorn volume from one node to another.
+  migratable: false
+  # -- Setting that disables the revision counter and thereby prevents Longhorn from tracking all write operations to a volume. When salvaging a volume, Longhorn uses properties of the volume-head-xxx.img file (the last file size and the last time the file was modified) to select the replica to be used for volume recovery.
+  disableRevisionCounter: "true"
+  # -- Set NFS mount options for Longhorn StorageClass for RWX volumes
+  nfsOptions: ""
+
+  
+ingress:
+  # -- Setting that allows Longhorn to generate ingress records for the Longhorn UI service.
+  enabled: true
+
+  # -- IngressClass resource that contains ingress configuration, including the name of the Ingress controller.
+  # ingressClassName can replace the kubernetes.io/ingress.class annotation used in earlier Kubernetes releases.
+  ingressClassName: ~
+
+  # -- Hostname of the Layer 7 load balancer.
+  host: longhorn-ui.cluster.example.com
+
+  # -- Setting that allows you to enable TLS on ingress records.
+  tls: false
+
+  # -- Setting that allows you to enable secure connections to the Longhorn UI service via port 443.
+  secureBackends: false
+
+  # -- TLS secret that contains the private key and certificate to be used for TLS. This setting applies only when TLS is enabled on ingress records.
+  tlsSecret: longhorn.local-tls
+
+  # -- Default ingress path. You can access the Longhorn UI by following the full ingress path {{host}}+{{path}}.
+  path: /
+
+  # -- Ingress path type. To maintain backward compatibility, the default value is "ImplementationSpecific".
+  pathType: ImplementationSpecific
+
+  ## If you're using kube-lego, you will want to add:
+  ## kubernetes.io/tls-acme: true
+  ##
+  ## For a full list of possible ingress annotations, please see
+  ## ref: https://github.com/kubernetes/ingress-nginx/blob/master/docs/annotations.md
+  ##
+  ## If tls is set to true, annotation ingress.kubernetes.io/secure-backends: "true" will automatically be set
+  # -- Ingress annotations in the form of key-value pairs.
+  annotations:
+  #  kubernetes.io/ingress.class: nginx
+  #  kubernetes.io/tls-acme: true
+
+  # -- Secret that contains a TLS private key and certificate. Use secrets if you want to use your own certificates to secure ingresses.
+  secrets:
+  ## If you're providing your own certificates, please use this to add the certificates as secrets
+  ## key and certificate should start with -----BEGIN CERTIFICATE----- or
+  ## -----BEGIN RSA PRIVATE KEY-----
+  ##
+  ## name should line up with a tlsSecret set further up
+  ## If you're using kube-lego, this is unneeded, as it will create the secret for you if it is not set
+  ##
+  ## It is also possible to create and manage the certificates outside of this helm chart
+  ## Please see README.md for more information
+  # - name: longhorn.local-tls
+  #   key:
+  #   certificate:

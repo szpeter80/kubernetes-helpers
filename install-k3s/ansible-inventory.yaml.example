@@ -23,3 +23,7 @@ g_workers:
     node2:
     node3:
     node4:
+
+g_longhorn:
+  children:
+    g_workers:

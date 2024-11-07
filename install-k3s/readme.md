@@ -25,3 +25,12 @@ Official docs:
 
 - <https://docs.k3s.io/>
 - <https://github.com/k3s-io/k3s/releases>
+
+Longhorn best practices:
+
+Source: <https://medium.com/@petolofsson/best-practices-for-longhorn-067d4ccb5fdd>
+
+  - Use dedicated disk(s), not the root volume (/var/lib/longhorn by default)
+  - If possible use dedicated storage nodes. The cluster can collapse if flapping storage nodes and affected user workloads starts to generate a flood of API requests.
+  - Set default replica count: "2". It provides resiliency while saves disk space and network bandwith.
+  - Set "best-effort" as the default data locality -> tries to place one copy of data next to the control engine. This means better IOPS and lower / stable io latency.

@@ -1,0 +1,47 @@
+---
+- name: Setup Longhorn requirements
+  hosts: g_longhorn
+  become: true
+
+  tasks:
+    - name: "Populate facts"
+      ansible.builtin.service_facts:
+
+    - name: Create a full size primary partition on sdb1
+      community.general.parted:
+        device: /dev/sdb
+        number: 1
+        state: present
+        part_start: 0%
+        part_end: 100%
+
+    - name: Format /dev/sdb1 as ext4
+      community.general.filesystem:
+        dev: /dev/sdb1
+        fstype: ext4
+
+    - name: Get UUID of /dev/sdb1
+      ansible.builtin.command: blkid /dev/sdb1 -s UUID -o value /dev/sdb1
+      register: sdb1_uuid
+      changed_when: false
+
+    - name: Create /srv/longhorn directory
+      ansible.builtin.file:
+        path: /srv/longhorn
+        state: directory
+        mode: '0755'
+
+#    - name: Add /dev/sdb1 to fstab by UUID
+#      lineinfile:
+#        dest: /etc/fstab
+#        line: "{{ sdb1_uuid }}  /srv/longhorn  ext4  defaults,auto,noatime  0  2"
+#        validate: 'blkid -o value -s UUID {{ item.line.split()[0] }}'
+#        create: yes
+
+    - name: Add /dev/sdb1 mounted as /srv/longhorn to /etc/fstab by UUID
+      ansible.posix.mount:
+        path: /srv/longhorn
+        src: "UUID={{ sdb1_uuid.stdout_lines[0] }}"
+        fstype: ext4
+        opts: defaults
+        state: mounted
