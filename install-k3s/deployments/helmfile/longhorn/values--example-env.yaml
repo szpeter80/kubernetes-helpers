@@ -30,6 +30,8 @@ persistence:
   nfsOptions: ""
 
 defaultSettings:
+  # -- Setting that allows Longhorn to automatically create a default disk only on nodes with the label "node.longhorn.io/create-default-disk=true" (if no other disks exist). When this setting is disabled, Longhorn creates a default disk on each node that is added to the cluster.
+  createDefaultDiskLabeledNodes: true
   # -- Default path for storing data on a host. The default value is "/var/lib/longhorn/".
   defaultDataPath: /srv/longhorn
   # -- Percentage of storage that can be allocated relative to hard drive capacity. The default value is "100".
