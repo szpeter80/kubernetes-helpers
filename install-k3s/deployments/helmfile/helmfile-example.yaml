@@ -6,6 +6,12 @@ environments:
 #
 # helm show values helm-repo/chart-name > values--example-env.yaml
 #
+# Code linters / schema validators might get confused
+# by the compact syntax used here to integrate
+# the main helmfile.yaml and environments.yaml 
+# If this is the case, you can provide an empty 
+# schema definition to your linter or just break
+# up this file to two distinct files
 
 ---
 
