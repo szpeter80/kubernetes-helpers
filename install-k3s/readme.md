@@ -28,6 +28,10 @@ Official docs:
 
 Longhorn best practices:
 
+In order to work, label your storage nodes with "node.longhorn.io/create-default-disk=true" and mount a disk in fstab on the node permamently udner /srv/lognhorn.  
+Pods consuming Longhorn PVs must run on nodes which are also Longhorn nodes.  
+In other words: if you restrict Longhorn nodes to a few of the cluster nodes, Pods with Longhorn PVCs needs to be scheduled on those nodes, otherwise the mount will fail.
+
 Source: <https://medium.com/@petolofsson/best-practices-for-longhorn-067d4ccb5fdd>
 
   - Use dedicated disk(s), not the root volume (/var/lib/longhorn by default)
