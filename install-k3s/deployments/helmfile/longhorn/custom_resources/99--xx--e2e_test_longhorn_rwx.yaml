@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: longhorn-rwxtest
+  namespace: default
+spec:
+  storageClassName: longhorn 
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Mi
+---
+kind: Pod
+apiVersion: v1
+
+metadata:
+  name: longhorn-rwxtest
+  namespace: default
+
+spec:
+  containers:
+
+  - name: longhorn-rwxtest
+    image: busybox:stable
+    command:
+      - "/bin/sh"
+    args:
+      - "-c"
+      - "touch /mnt/SUCCESS && exit 0 || exit 1"
+    volumeMounts:
+      - name: longhorn-rwxtest
+        mountPath: "/mnt"
+
+  restartPolicy: "Never"
+
+  volumes:
+    - name: longhorn-rwxtest
+      persistentVolumeClaim:
+        claimName: longhorn-rwxtest
