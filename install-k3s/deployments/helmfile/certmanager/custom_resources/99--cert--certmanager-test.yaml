@@ -8,4 +8,4 @@ spec:
     - example.com
   secretName: certmanager-test-certificate
   issuerRef:
-    name: selfsigned
+    name: certmanager-clusterissuer-selfsigned
