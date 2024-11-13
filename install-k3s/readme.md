@@ -1,6 +1,8 @@
 Install a K3S Kubernetes cluster
 ================================
 
+Target system OS: Armbian, but could work with Debian/Ubuntu on amd64
+
 Key points:
 
 - Single master: only sandbox/dev/test use, not produciton ready
