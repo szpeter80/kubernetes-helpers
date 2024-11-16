@@ -29,6 +29,6 @@ fi
 . "${VENV_DIR}"/bin/activate
 
 
-ansible -i ./ansible-inventory.yaml -m reboot --verbose -v all
+ansible -i ./ansible-inventory.yaml -m reboot --become --verbose -v all
 
 deactivate

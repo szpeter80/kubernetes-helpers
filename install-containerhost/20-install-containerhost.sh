@@ -1,7 +1,5 @@
 #!/bin/bash
-
-SELF_REAL_FN="$(readlink -en "$0")"
-DEFAULT_ENV_REALPATH="$(cd "$(dirname -- "$SELF_REAL_FN")" || exit 1 >/dev/null; pwd -P)/default.env"
+DEFAULT_ENV_REALPATH="../default.env"
 
 # shellcheck disable=SC1090
 . "$DEFAULT_ENV_REALPATH"
@@ -32,8 +30,9 @@ fi
 if [ ! -f "$ANSIBLE_SSH_KEY" ];
 then
   echo "Ansible SSH key file ($ANSIBLE_SSH_KEY) not found, did you forget to create ?"
+  exit 1
 fi
 
-ansible -i ./ansible-inventory.yaml -m ansible.builtin.dnf -a "update_cache=yes state=latest name=*" --become --verbose -v all
+ansible-playbook -i ./ansible-inventory.yaml  install-containerhost.yaml  --verbose -v 
 
 deactivate

@@ -1,5 +1,5 @@
 ---
-- name: Install Kubernetes nodes
+- name: Install and configure container host(s)
   hosts: all
   become: true
 
@@ -7,17 +7,17 @@
   vars:
     time_zone: "Europe/Budapest"
 
-    system_services:
-      - "chrony.service"
+    system_services: []
+#      - "chrony.service"
 
     packages_install_dnf:
       - bind-utils        # Debug DNS
       - net-tools         # Debug network, eg ping
       - nc                # Debug network, tcp
       - nmap              # Debug network, scan
-      - ntpsec            # Debug NTP
+      - ntpstat           # Debug NTP
       - jq                # JSON processing
-      - pwgen             # Security: password generation
+#      - pwgen             # Security: password generation
       - podman            # Podman engine
       - container-tools   # Buildah, Skopeo, CRIU (snapshot container state to disk), Udica (selinux policy generator for containers)
 
