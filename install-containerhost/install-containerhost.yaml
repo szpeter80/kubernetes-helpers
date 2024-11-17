@@ -7,8 +7,13 @@
   vars:
     time_zone: "Europe/Budapest"
 
-    system_services: []
-#      - "chrony.service"
+    system_services:
+      - "firewalld"
+
+    firewall_allowed_ports:
+      - "22/tcp"
+      - "80/tcp"
+      - "443/tcp"
 
     packages_install_dnf:
       - bind-utils        # Debug DNS
@@ -18,9 +23,15 @@
       - ntpstat           # Debug NTP
       - jq                # JSON processing
 #      - pwgen             # Security: password generation
+      - rsync             # Ansible needs for ansible.posix.synchronize
       - podman            # Podman engine
+      - podman-compose    # Podman compose (EPEL)
       - container-tools   # Buildah, Skopeo, CRIU (snapshot container state to disk), Udica (selinux policy generator for containers)
 
+    # Docker "stack"-s
+    container_projects:
+      - lampstack-prod
+      - zabbix-sbx
 
   tasks:
     - name: "Populate facts"
@@ -30,6 +41,14 @@
       community.general.timezone:
         name: "{{ time_zone }}"
 
+    - name: Set hostname to inventory hostname
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname }}"
+
+    - name: Enable EPEL repository
+      ansible.builtin.dnf:
+        name: epel-release
+        state: present
 
     - name: "Install packages"
       ansible.builtin.dnf:
@@ -43,24 +62,46 @@
         state: started
       with_items: "{{ system_services }}"
 
-#     - name: "Set up host firewall"
-#       import_role:
-#         name: "linux-system-roles.firewall"
-#       vars:
-#         firewall:
-#           - zone:    "external"
-#             port:    "80/tcp"
-#             state:   enabled
-#
-#           - zone:    "external"
-#             port:    "443/tcp"
-#             state:   enabled
+    - name: "Set up host firewall"
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        state: enabled
+        permanent: true
+      with_items: "{{ firewall_allowed_ports }}"
+      notify: "Restart firewalld"
 
+    - name: "Copy container project files"
+      # https://docs.ansible.com/ansible/latest/collections/ansible/posix/synchronize_module.html#parameters
+      ansible.posix.synchronize:
+        mode: push
+        src: container-projects
+        dest: "~"
+        # delete: true
+        recursive: true
+
+### podman-compose systemd magic
+### https://github.com/containers/podman-compose/blob/f6dbce36181c44d0d08b6f4ca166508542875ce1/podman_compose.py#L1817-L1896
+
+    - name: Create podman-compose Systemd unit
+      ansible.builtin.command:
+        cmd: podman-compose systemd --action create-unit
+      args:
+        chdir: ~/container-projects/lampstack-prod
+      register: result
+      changed_when: result.rc == 0
+      failed_when: result.rc != 0
+      when: not stat.exists("/etc/systemd/user/podman-compose@.service")
+
+### Handlers
 
   handlers:
     - name: "Reboot the machine"
       ansible.builtin.reboot:
 
+    - name: "Restart firewalld"
+      ansible.builtin.systemd:
+        name: firewalld
+        state: restarted
 
     - name: "Restart systemd"
       ansible.builtin.systemd:
