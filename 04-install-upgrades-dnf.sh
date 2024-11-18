@@ -34,6 +34,6 @@ then
   echo "Ansible SSH key file ($ANSIBLE_SSH_KEY) not found, did you forget to create ?"
 fi
 
-ansible -i ./ansible-inventory.yaml -m ansible.builtin.dnf -a "update_cache=yes state=latest name=*" --become --verbose -v all
+ansible -i ./ansible-inventory.yaml -m ansible.builtin.dnf -a 'update_cache=true name=* state=latest' --become --verbose -v all
 
 deactivate

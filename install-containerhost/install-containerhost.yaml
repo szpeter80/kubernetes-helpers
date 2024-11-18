@@ -82,17 +82,38 @@
 ### podman-compose systemd magic
 ### https://github.com/containers/podman-compose/blob/f6dbce36181c44d0d08b6f4ca166508542875ce1/podman_compose.py#L1817-L1896
 
+    - name: Check if podman-compose Systemd unit exists
+      ansible.builtin.stat:
+        path: /etc/systemd/user/podman-compose@.service
+      register: podman_compose_systemd_unit_file
+
+    # Create Podman unit once, later projects / stacks can be registered individually
     - name: Create podman-compose Systemd unit
       ansible.builtin.command:
         cmd: podman-compose systemd --action create-unit
-      args:
-        chdir: ~/container-projects/lampstack-prod
+      # args:
+      #   chdir: ~/container-projects/lampstack-prod
       register: result
       changed_when: result.rc == 0
       failed_when: result.rc != 0
-      when: not stat.exists("/etc/systemd/user/podman-compose@.service")
+      when: not podman_compose_systemd_unit_file.stat.exists
 
+    # Register projects to podman-compose systemd
+    # - name: Register project / stack to  podman-compose systemd
+    #   ansible.builtin.command:
+    #     cmd: podman-compose systemd --action register
+    #   args:
+    #     chdir: ~/container-projects/lampstack-prod
+
+
+      # TODO:
+      # - finisk task to register all listed projects (use templating with username + project name for paths; check if already registered with "when")
+      # - check if systemd unit is OK
+      # - Check start / stop / restart / reboot behaviour
+
+###############################################################################
 ### Handlers
+###############################################################################
 
   handlers:
     - name: "Reboot the machine"

@@ -3,7 +3,14 @@ all:
     # https://docs.ansible.com/ansible-core/2.17/reference_appendices/interpreter_discovery.html
     ansible_python_interpreter: auto_silent
     ansible_ssh_private_key_file: <path/to/ssh_key>
+
   hosts:
     containerhost.example.com:
       ansible_host: 1.2.3.4
       ansible_user: admin
+      # If multiple python version is installed (eg system python 3.9 and python 3.11) ansible will use the latest 
+      # but the system provided python packages eg firewall integration "python3-firewalld" is present only for
+      # the system python, causing the ansible uploaded code to remote to fail. An alternate solution to pinning
+      # the interpretrt would be to ensure all but system python is fully uninstalled.
+      # From https://stackoverflow.com/questions/67193176/python-module-firewall-not-found
+      ansible_python_interpreter: "/usr/bin/python3.9"
