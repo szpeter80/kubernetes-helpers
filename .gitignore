@@ -1,9 +1,13 @@
+# VSCode settings during development
 .vscode
 
+# user customizations for the shell scripts
 custom.env
 
+# Python, mostly for Ansible
 .venv
 
+# Ansible
 ansible-inventory.yaml
 ansible-log.txt
 ansible.cfg
@@ -11,15 +15,17 @@ ansible.cfg
 remoteadmin_rootlogin_key
 remoteadmin_rootlogin_key.pub
 
+# K3S configuration
 node-token
 k3s.yaml
 
+# Helmfile general exclude
 helmfile.yaml
 values*
 !values--example-env*
 
+# Helmfile deployments for K3S
 # https://stackoverflow.com/questions/5533050/gitignore-exclude-folder-but-include-specific-subfolder
-
 install-k3s/deployments/helmfile/*
 !install-k3s/deployments/helmfile/helmfile-example.yaml
 !install-k3s/deployments/helmfile/nfs-subdir-external-provisioner
@@ -27,6 +33,12 @@ install-k3s/deployments/helmfile/*
 !install-k3s/deployments/helmfile/certmanager
 !install-k3s/deployments/helmfile/kube-dashboard
 
+
+# Containerhost excludes
+
 podman-compose.yaml
+# PHPMyAdmin
 config.user.inc.php
 haproxy.cfg
+# PHPPgAdmin
+config.inc.php

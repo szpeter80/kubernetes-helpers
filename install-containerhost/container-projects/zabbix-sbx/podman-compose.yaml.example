@@ -1,0 +1,141 @@
+---
+### https://docs.docker.com/compose/compose-file/
+
+volumes:
+  postgres-data:
+
+services:
+
+  ##haproxy:
+  ##  # https://hub.docker.com/_/haproxy
+  ##  image: docker.io/library/haproxy:3.0.4-alpine
+  ##  ports:
+  ##    - 80:80
+  ##    - 443:443
+  ##  cap_add:
+  ##    - CAP_NET_ADMIN
+  ##  environment:
+  ##    - TZ=Europe/Budapest
+  ##  restart: unless-stopped
+  ##  volumes:
+  ##    - /home/admin/container-projects/lampstack-prod/001-haproxy/certs:/etc/ssl/certs:z,ro
+  ##    - /home/admin/container-projects/lampstack-prod/001-haproxy/haproxy.cfg:z,ro
+  
+  zabbix-server:
+    image: docker.io/zabbix/zabbix-server-pgsql:alpine-7.0-latest
+    ports:
+      - 10051:10051
+    environment:
+      - TZ=Europe/Budapest
+      - LANG=en_US.utf8
+      - DB_SERVER_HOST=postgres
+      - DB_SERVER_PORT=5432
+      - POSTGRES_DB=zabbix
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=dummy
+      - ZBX_STARTREPORTWRITERS=1
+      - ZBX_WEBSERVICEURL=http://zabbix-web-service:10053/report
+      - ZBX_DEBUGLEVEL=3
+    restart: unless-stopped
+    volumes:
+      - /home/admin/container-projects/zabbix-sbx/200-zabbix-server/ssh-keys:/var/lib/zabbix/ssh_keys:z,ro
+    depends_on:
+      - postgres
+
+  zabbix-web:
+    image: docker.io/zabbix/zabbix-web-nginx-pgsql:alpine-7.0-latest
+    ports:
+      - 8080:8080
+      - 8443:8443
+    environment:
+      - TZ=Europe/Budapest
+      - PHP_TZ=Europe/Budapest
+      - LANG=en_US.utf8
+      - DB_SERVER_HOST=postgres
+      - DB_SERVER_PORT=5432
+      - POSTGRES_DB=zabbix
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=dummy
+      # UI - friendly display name of the instance
+      - ZBX_SERVER_NAME="Zabbix Monitoring (SBX)"
+      - ZBX_SERVER_HOST=zabbix-server
+      - ZBX_SERVER_PORT=10051
+      - ZBX_DEBUGLEVEL=3
+    restart: unless-stopped
+    volumes:
+      - /home/admin/container-projects/zabbix-sbx/200-zabbix-server/ssh-keys:/var/lib/zabbix/ssh_keys:z,ro
+    depends_on:
+      - zabbix-server
+
+  zabbix-webservice:
+    image: docker.io/zabbix/zabbix-web-service:alpine-7.0-latest
+    ports:
+      - 10053:10053
+    environment:
+      - TZ=Europe/Budapest
+      - LANG=en_US.utf8
+      - ZBX_ALLOWEDIP="localhost,10.0.0.0/8,192.168.0.0/16,172.0.0.0/8"
+      - ZBX_TLSACCEPT=unencrypted
+      - ZBX_IGNOREURLCERTERRORS=1
+      - ZBX_TIMEOUT=30
+      - ZBX_DEBUGLEVEL=5
+    restart: unless-stopped
+
+  zabbix-agent:
+    image: docker.io/zabbix/zabbix-agent2:alpine-7.0-latest
+    environment:
+      - TZ=Europe/Budapest
+      - LANG=en_US.utf8
+      - ZBX_ZBX_SERVER_HOST="zabbix-server,10.0.0.0/8,192.168.0.0/16,172.0.0.0/8"
+      - ZBX_DEBUGLEVEL=3
+    restart: unless-stopped
+
+  phppgadmin:
+    # https://hub.docker.com/r/tozd/phppgadmin
+    image: docker.io/tozd/phppgadmin:latest
+#    ports:
+#      - 9090:80
+    environment:
+      - TZ=Europe/Budapest
+      - LANG=en_US.utf8
+      - PHPPGADMIN_HOST=postgres
+      - PHPPGADMIN_PORT=5432
+      - UPLOAD_LIMIT=100M
+    restart: unless-stopped
+    volumes:
+      - /home/admin/container-projects/zabbix-sbx/900-postgresql/phppgadmin/config.inc.php:/etc/phppgadmin/config.inc.php:z
+    depends_on:
+      - postgres
+
+  postgres:
+    # https://hub.docker.com/_/mariadb
+    image: docker.io/library/postgres:16-bullseye
+    environment:
+      - TZ=Europe/Budapest
+      - LANG=en_US.utf8
+      - PGDATA=/var/lib/postgresql/data
+      - POSTGRES_PASSWORD=dummy
+    restart: unless-stopped
+    volumes:
+      - postgres-data:var/lib/postgresql/data
+      - /home/admin/container-projects/zabbix-sbx/900-postgresql/postgresql-backups:/mnt/postgresql-backups:z,ro
+
+  postgres-backup:
+    image: localhost/local/postgresql-backup:latest
+    environment:
+      - TZ=Europe/Budapest
+      - LANG=en_US.utf8
+      - DATA_DIR=/mnt/postgres-backups
+      - INSTALL_DIR=/root/scripts
+      - PGPASSFILE=/root/scripts/pgpass.txt
+      - PGBACKUP_HOSTNAME=postgres
+      - PGBACKUP_PORT=5432
+      - PGBACKUP_DATABASE=*
+      - PGBACKUP_USERNAME=postgres
+      - PGBACKUP_PASSWORD=dummy
+      - PGBACKUP_RETENTION_DAYS=30
+    restart: unless-stopped
+    volumes:
+      - /home/admin/container-projects/zabbix-sbx/900-postgresql/postgresql-backups:/mnt/postgres-backups:z
+    depends_on:
+      - postgres
