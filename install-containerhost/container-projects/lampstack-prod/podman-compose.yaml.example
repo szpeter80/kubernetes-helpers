@@ -18,8 +18,8 @@ services:
       - TZ=Europe/Budapest
     restart: unless-stopped
     volumes:
-      - /path/to/project/haproxy/certs:/etc/ssl/certs:z,ro
-      - /path/to/project/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:z,ro
+      - /home/admin/container-projects/lampstack-prod/001-haproxy/certs:/etc/ssl/certs:z,ro
+      - /home/admin/container-projects/lampstack-prod/001-haproxy/haproxy.cfg:z,ro
 
   nginx:
     ### https://hub.docker.com/_/nginx
@@ -60,7 +60,7 @@ services:
       - UPLOAD_LIMIT=100M
     restart: unless-stopped
     volumes:
-      - /path/to/project/phpmyadmin/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php:z
+      - /home/admin/container-projects/lampstack-prod/900-mariadb/phpmyadmin/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php:z
     depends_on:
       - mariadb
 
@@ -76,7 +76,7 @@ services:
     restart: unless-stopped
     volumes:
       - mariadb-data:/var/lib/mysql
-      - /path/to/mariadb-backups:/mnt/mariadb-backups:z,ro
+      - /home/admin/container-projects/lampstack-prod/900-mariadb/mariadb-backups:/mnt/mariadb-backups:z,ro
 
   mariadb-backup:
     image: localhost/mycomp/mariadb-backup:latest
@@ -88,6 +88,6 @@ services:
       - BACKUP_RETENTION_DAYS=30
     restart: unless-stopped
     volumes:
-      - /path/to/mariadb-backups:/mnt/mariadb-backups:z
+      - /home/admin/container-projects/lampstack-prod/900-mariadb/mariadb-backups:/mnt/mariadb-backups:z
     depends_on:
       - mariadb

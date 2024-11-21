@@ -28,3 +28,5 @@ install-k3s/deployments/helmfile/*
 !install-k3s/deployments/helmfile/kube-dashboard
 
 podman-compose.yaml
+config.user.inc.php
+haproxy.cfg
