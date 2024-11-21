@@ -27,3 +27,4 @@ install-k3s/deployments/helmfile/*
 !install-k3s/deployments/helmfile/certmanager
 !install-k3s/deployments/helmfile/kube-dashboard
 
+podman-compose.yaml

@@ -91,23 +91,26 @@
     - name: Create podman-compose Systemd unit
       ansible.builtin.command:
         cmd: podman-compose systemd --action create-unit
-      # args:
-      #   chdir: ~/container-projects/lampstack-prod
       register: result
       changed_when: result.rc == 0
       failed_when: result.rc != 0
       when: not podman_compose_systemd_unit_file.stat.exists
 
-    # Register projects to podman-compose systemd
-    # - name: Register project / stack to  podman-compose systemd
-    #   ansible.builtin.command:
-    #     cmd: podman-compose systemd --action register
-    #   args:
-    #     chdir: ~/container-projects/lampstack-prod
 
+    # Register projects to podman-compose systemd
+    - name: Register project / stack to  podman-compose systemd
+      ansible.builtin.command:
+        cmd: podman-compose systemd --action register
+      args:
+        chdir: "/home/{{ ansible_user }}/container-projects/{{ item }}"
+      changed_when: result.rc == 0
+      failed_when: result.rc != 0
+      with_items: "{{ container_projects }}"
 
       # TODO:
-      # - finisk task to register all listed projects (use templating with username + project name for paths; check if already registered with "when")
+      # - finisk task to register all listed projects
+      #      (use templating with username + project name for paths;
+      #      check if already registered with "when")
       # - check if systemd unit is OK
       # - Check start / stop / restart / reboot behaviour
 
