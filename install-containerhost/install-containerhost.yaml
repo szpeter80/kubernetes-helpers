@@ -23,6 +23,8 @@
       - ntpstat           # Debug NTP
       - jq                # JSON processing
 #      - pwgen             # Security: password generation
+      - tree              # File system utility
+      - git               # Checkout postgres-backup repo for local build
       - rsync             # Ansible needs for ansible.posix.synchronize
       - podman            # Podman engine
       - podman-compose    # Podman compose (EPEL)
@@ -30,7 +32,7 @@
 
     # Docker "stack"-s
     container_projects:
-      - lampstack-prod
+      # - lampstack-prod
       - zabbix-sbx
 
   tasks:
@@ -79,6 +81,15 @@
         # delete: true
         recursive: true
 
+### Local build of postgres-backup container
+    - name: Git checkout "postgres-backup" project
+      # noqa: latest
+      ansible.builtin.git:
+        repo: 'https://github.com/szpeter80/misc.git'
+        dest: /home/{{ ansible_user }}/container-projects/zabbix-sbx/900-postgresql/postgres-backup/repo
+
+### TODO: podman build --tag local/postgresql-backup:latest .
+
 ### podman-compose systemd magic
 ### https://github.com/containers/podman-compose/blob/f6dbce36181c44d0d08b6f4ca166508542875ce1/podman_compose.py#L1817-L1896
 
@@ -106,13 +117,6 @@
       changed_when: result.rc == 0
       failed_when: result.rc != 0
       with_items: "{{ container_projects }}"
-
-      # TODO:
-      # - finisk task to register all listed projects
-      #      (use templating with username + project name for paths;
-      #      check if already registered with "when")
-      # - check if systemd unit is OK
-      # - Check start / stop / restart / reboot behaviour
 
 ###############################################################################
 ### Handlers
