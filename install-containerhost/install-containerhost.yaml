@@ -1,7 +1,7 @@
 ---
 - name: Install and configure container host(s)
   hosts: all
-  become: true
+  become: false
 
 
   vars:
@@ -37,27 +37,33 @@
 
   tasks:
     - name: "Populate facts"
+      become: true
       ansible.builtin.service_facts:
 
     - name: "Set timezone"
+      become: true
       community.general.timezone:
         name: "{{ time_zone }}"
 
     - name: Set hostname to inventory hostname
+      become: true
       ansible.builtin.hostname:
         name: "{{ inventory_hostname }}"
 
     - name: Enable EPEL repository
+      become: true
       ansible.builtin.dnf:
         name: epel-release
         state: present
 
     - name: "Install packages"
+      become: true
       ansible.builtin.dnf:
         name: "{{ packages_install_dnf }}"
         state: present
 
     - name: "Enable and start services"
+      become: true
       ansible.builtin.service:
         name: "{{ item }}"
         enabled: true
@@ -65,6 +71,7 @@
       with_items: "{{ system_services }}"
 
     - name: "Set up host firewall"
+      become: true
       ansible.posix.firewalld:
         port: "{{ item }}"
         state: enabled
@@ -88,18 +95,34 @@
         repo: 'https://github.com/szpeter80/misc.git'
         dest: /home/{{ ansible_user }}/container-projects/zabbix-sbx/900-postgresql/postgres-backup/repo
 
-### TODO: podman build --tag local/postgresql-backup:latest .
+
+    - name: Build "postgres-backup" image
+      containers.podman.podman_image:
+        name: local/postgresql-backup:latest
+        path: /home/{{ ansible_user }}/container-projects/zabbix-sbx/900-postgresql/postgres-backup/repo/containers/pg-backup
+        build:
+          # cache: false
+          rm: true
+          format: oci
+          annotation:
+            info: "Locally built image"
 
 ### podman-compose systemd magic
+
 ### https://github.com/containers/podman-compose/blob/f6dbce36181c44d0d08b6f4ca166508542875ce1/podman_compose.py#L1817-L1896
+### https://github.com/containers/podman-compose/blob/main/podman_compose.py#L2268-L2346
+
+### Create the systemd unit file
 
     - name: Check if podman-compose Systemd unit exists
+      become: true
       ansible.builtin.stat:
         path: /etc/systemd/user/podman-compose@.service
       register: podman_compose_systemd_unit_file
 
     # Create Podman unit once, later projects / stacks can be registered individually
-    - name: Create podman-compose Systemd unit
+    - name: Create podman-compose Systemd user unit
+      become: true
       ansible.builtin.command:
         cmd: podman-compose systemd --action create-unit
       register: result
@@ -107,16 +130,49 @@
       failed_when: result.rc != 0
       when: not podman_compose_systemd_unit_file.stat.exists
 
+### Fixup broken systemd unit file
+### podman-compose up should create containers in a Pod, because all systemd
+### commands operate on Pod's ... The default should be "on" for this switch
+### but for some reason it is observed that is not the case. So we have to fix up
 
-    # Register projects to podman-compose systemd
-    - name: Register project / stack to  podman-compose systemd
+    - name: Update podman-compose Systemd user unit
+      become: true
+      ansible.builtin.lineinfile:
+        path: /etc/systemd/user/podman-compose@.service
+        search_string: 'ExecStartPre=-/usr/bin/podman-compose up --no-start'
+        line: 'ExecStartPre=-/usr/bin/podman-compose --in-pod true up --no-start'
+
+### Register projects === create .env files under
+
+### FIXME: register always tries to create the all the containers without pod
+### This causes name conflicts when systemd start event tries to create,
+### and if you create the stack correctly before, then the register command errors out
+### Have to template the .env creation and forget this register madness...
+
+#    # Register projects to podman-compose systemd
+#    - name: Register project / stack to  podman-compose systemd
+#      ansible.builtin.command:
+#        cmd: podman-compose systemd --action register
+#      args:
+#        chdir: "/home/{{ ansible_user }}/container-projects/{{ item }}"
+#      register: result
+#      changed_when: result.rc == 0
+#      failed_when: result.rc != 0
+#      with_items: "{{ container_projects }}"
+
+    - name: Enable linger for container service user
+      become: true
       ansible.builtin.command:
-        cmd: podman-compose systemd --action register
-      args:
-        chdir: "/home/{{ ansible_user }}/container-projects/{{ item }}"
-      changed_when: result.rc == 0
-      failed_when: result.rc != 0
-      with_items: "{{ container_projects }}"
+        cmd: "loginctl enable-linger {{ ansible_user }}"
+        creates: "/var/lib/systemd/linger/{{ ansible_user }}"
+
+#    - name: Start projects as user systemd units
+#      ansible.builtin.systemd_service:
+#        scope: user
+#        name: "podman-compose@{{ item }}"
+#        enabled: true
+#        state: started
+#      with_items: "{{ container_projects }}"
 
 ###############################################################################
 ### Handlers
@@ -124,14 +180,17 @@
 
   handlers:
     - name: "Reboot the machine"
+      become: true
       ansible.builtin.reboot:
 
     - name: "Restart firewalld"
+      become: true
       ansible.builtin.systemd:
         name: firewalld
         state: restarted
 
     - name: "Restart systemd"
+      become: true
       ansible.builtin.systemd:
         daemon-reload: true
 
