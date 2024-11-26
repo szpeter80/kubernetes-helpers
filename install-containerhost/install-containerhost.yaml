@@ -84,7 +84,7 @@
       ansible.posix.synchronize:
         mode: push
         src: container-projects
-        dest: "~"
+        dest: "/home/{{ ansible_user }}"
         # delete: true
         recursive: true
 
@@ -107,64 +107,22 @@
           annotation:
             info: "Locally built image"
 
-### podman-compose systemd magic
-
-### https://github.com/containers/podman-compose/blob/f6dbce36181c44d0d08b6f4ca166508542875ce1/podman_compose.py#L1817-L1896
-### https://github.com/containers/podman-compose/blob/main/podman_compose.py#L2268-L2346
-
-### Create the systemd unit file
-
-    - name: Check if podman-compose Systemd unit exists
-      become: true
-      ansible.builtin.stat:
-        path: /etc/systemd/user/podman-compose@.service
-      register: podman_compose_systemd_unit_file
-
-    # Create Podman unit once, later projects / stacks can be registered individually
-    - name: Create podman-compose Systemd user unit
-      become: true
-      ansible.builtin.command:
-        cmd: podman-compose systemd --action create-unit
-      register: result
-      changed_when: result.rc == 0
-      failed_when: result.rc != 0
-      when: not podman_compose_systemd_unit_file.stat.exists
-
-### Fixup broken systemd unit file
-### podman-compose up should create containers in a Pod, because all systemd
-### commands operate on Pod's ... The default should be "on" for this switch
-### but for some reason it is observed that is not the case. So we have to fix up
-
-    - name: Update podman-compose Systemd user unit
-      become: true
-      ansible.builtin.lineinfile:
-        path: /etc/systemd/user/podman-compose@.service
-        search_string: 'ExecStartPre=-/usr/bin/podman-compose up --no-start'
-        line: 'ExecStartPre=-/usr/bin/podman-compose --in-pod true up --no-start'
-
-### Register projects === create .env files under
-
-### FIXME: register always tries to create the all the containers without pod
-### This causes name conflicts when systemd start event tries to create,
-### and if you create the stack correctly before, then the register command errors out
-### Have to template the .env creation and forget this register madness...
-
-#    # Register projects to podman-compose systemd
-#    - name: Register project / stack to  podman-compose systemd
-#      ansible.builtin.command:
-#        cmd: podman-compose systemd --action register
-#      args:
-#        chdir: "/home/{{ ansible_user }}/container-projects/{{ item }}"
-#      register: result
-#      changed_when: result.rc == 0
-#      failed_when: result.rc != 0
-#      with_items: "{{ container_projects }}"
-
+### Systemd integration
     - name: Enable linger for container service user
       become: true
       ansible.builtin.command:
         cmd: "loginctl enable-linger {{ ansible_user }}"
         creates: "/var/lib/systemd/linger/{{ ansible_user }}"
+
+    - name: Generate per-project systemd unit files
+      become: true
+      ansible.builtin.template:
+        src: ansible-templates/podman_compose_systemd_unit.j2
+        dest: /etc/systemd/user/podman--{{ item }}.service
+        owner: root
+        group: root
+        mode: u=rw,g=r,o=r
+      with_items: "{{ container_projects }}"
 
 #    - name: Start projects as user systemd units
 #      ansible.builtin.systemd_service:

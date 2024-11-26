@@ -117,8 +117,8 @@ services:
       - POSTGRES_PASSWORD=dummy
     restart: unless-stopped
     volumes:
-      - postgres-data:var/lib/postgresql/data
-      - /home/admin/container-projects/zabbix-sbx/900-postgresql/postgresql-backups:/mnt/postgresql-backups:z,ro
+      - postgres-data:/var/lib/postgresql/data
+      - /home/admin/container-projects/zabbix-sbx/900-postgresql/postgresql-backups:/mnt/postgres-backups:z,ro
 
   postgres-backup:
     image: localhost/local/postgresql-backup:latest
