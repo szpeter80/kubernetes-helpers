@@ -1,10 +1,6 @@
 # {{ ansible_managed }}
-# /etc/systemd/user/podman-compose_%i.service
+# /etc/systemd/user/podman-compose--{{ item }}.service
 
-#COMPOSE_PROJECT_DIR=/home/labadmin/container-projects/zabbix-sbx
-#COMPOSE_FILE=podman-compose.yaml
-#COMPOSE_PATH_SEPARATOR=:
-#COMPOSE_PROJECT_NAME=zabbix-sbx
 
 [Unit]
 Description={{ item }} rootless pod (podman-compose)
@@ -12,11 +8,14 @@ Description={{ item }} rootless pod (podman-compose)
 [Service]
 Type=simple
 
-EnvironmentFile=%h/.config/containers/compose/projects/%i.env
+Environment="COMPOSE_FILE=podman-compose.yaml"
+Environment="COMPOSE_PATH_SEPARATOR=:"
+Environment="COMPOSE_PROJECT_NAME={{ item }}"
+Environment="COMPOSE_PROJECT_DIR=/home/{{ ansible_user }}/container-projects/{{ item }}"
+
 
 ExecStartPre=-/usr/bin/podman-compose --in-pod true up --no-start
 ExecStartPre=/usr/bin/podman pod start pod_{{ item }}
-
 ExecStart=/usr/bin/podman-compose wait
 
 ExecStop=/usr/bin/podman pod stop pod_{{ item }}
