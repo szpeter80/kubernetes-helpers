@@ -29,8 +29,12 @@ fi
 . "${VENV_DIR}"/bin/activate
 
 #ansible-config init --disabled -t all >ansible.cfg
-echo > ansible.cfg
-echo '[defaults]' >> ansible.cfg
-echo 'log_path=ansible-log.txt' >> ansible.cfg
+
+cat <<'EOF' > ansible.cfg
+[defaults]
+  nocows=1
+  log_path=ansible-log.txt
+  ansible_managed = Ansible managed: {file} modified on %Y-%m-%d %H:%M:%S by {uid} on {host}
+EOF
 
 deactivate
