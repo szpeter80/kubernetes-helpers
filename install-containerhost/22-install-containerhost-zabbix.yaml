@@ -1,0 +1,88 @@
+---
+- name: Install and configure container host(s)
+  hosts: g_zabbix
+  become: false
+
+
+  vars:
+    container_project_name: zabbix
+    firewall_allowed_ports:
+      - "22/tcp"
+      - "80/tcp"
+      - "443/tcp"
+      - "8080/tcp"
+
+  tasks:
+    - name: "Populate facts"
+      become: true
+      ansible.builtin.service_facts:
+
+    - name: "Set up host firewall"
+      become: true
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        state: enabled
+        permanent: true
+      with_items: "{{ firewall_allowed_ports }}"
+      notify: "Restart firewalld"
+
+    - name: "Copy container project files"
+      # https://docs.ansible.com/ansible/latest/collections/ansible/posix/synchronize_module.html#parameters
+      ansible.posix.synchronize:
+        mode: push
+        src: container-projects/{{ container_project_name }}
+        dest: "/home/{{ ansible_user }}/container-projects/"
+        # delete: true
+        recursive: true
+
+### Local build of postgres-backup container
+    - name: Git checkout "postgres-backup" project
+      # noqa: latest
+      ansible.builtin.git:
+        repo: 'https://github.com/szpeter80/misc.git'
+        dest: /home/{{ ansible_user }}/container-projects/{{ container_project_name }}/900-postgresql/postgres-backup/repo
+
+
+    - name: Build "postgres-backup" image
+      containers.podman.podman_image:
+        name: local/postgresql-backup:latest
+        path: /home/{{ ansible_user }}/container-projects/{{ container_project_name }}/900-postgresql/postgres-backup/repo/containers/pg-backup
+        build:
+          # cache: false
+          rm: true
+          format: oci
+          annotation:
+            info: "Locally built image"
+
+### Systemd integration
+    - name: Generate systemd unit file for {{ container_project_name }}
+      become: true
+      ansible.builtin.template:
+        src: ansible-templates/podman_compose_systemd_unit.j2
+        dest: /etc/systemd/user/podman-compose--{{ container_project_name }}.service
+        owner: root
+        group: root
+        mode: u=rw,g=r,o=r
+
+    - name: Start user systemd unit for container project {{ container_project_name }}
+      ansible.builtin.systemd_service:
+        scope: user
+        name: "podman-compose--{{ container_project_name }}"
+        enabled: true
+        state: started
+
+###############################################################################
+### Handlers
+###############################################################################
+
+  handlers:
+    - name: "Restart firewalld"
+      become: true
+      ansible.builtin.systemd:
+        name: firewalld
+        state: restarted
+
+    - name: "Restart systemd"
+      become: true
+      ansible.builtin.systemd:
+        daemon-reload: true

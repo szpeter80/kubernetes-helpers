@@ -1,24 +1,24 @@
 # {{ ansible_managed }}
-# /etc/systemd/user/podman-compose--{{ item }}.service
+# /etc/systemd/user/podman-compose--{{ container_project_name }}.service
 
 
 [Unit]
-Description={{ item }} rootless pod (podman-compose)
+Description={{ container_project_name }} rootless pod (podman-compose)
 
 [Service]
 Type=simple
 
 Environment="COMPOSE_FILE=podman-compose.yaml"
 Environment="COMPOSE_PATH_SEPARATOR=:"
-Environment="COMPOSE_PROJECT_NAME={{ item }}"
-Environment="COMPOSE_PROJECT_DIR=/home/{{ ansible_user }}/container-projects/{{ item }}"
+Environment="COMPOSE_PROJECT_NAME={{ container_project_name }}"
+Environment="COMPOSE_PROJECT_DIR=/home/{{ ansible_user }}/container-projects/{{ container_project_name }}"
 
 
 ExecStartPre=-/usr/bin/podman-compose --in-pod true up --no-start
-ExecStartPre=/usr/bin/podman pod start pod_{{ item }}
+ExecStartPre=/usr/bin/podman pod start pod_{{ container_project_name }}
 ExecStart=/usr/bin/podman-compose wait
 
-ExecStop=/usr/bin/podman pod stop pod_{{ item }}
+ExecStop=/usr/bin/podman pod stop pod_{{ container_project_name }}
 
 [Install]
 WantedBy=default.target

@@ -1,0 +1,73 @@
+---
+- name: Install and configure container host(s) common settings
+  hosts: all
+  become: false
+
+
+  vars:
+    time_zone: "Europe/Budapest"
+
+    system_services:
+      - "firewalld"
+
+    packages_install_dnf:
+      - bind-utils        # Debug DNS
+      - net-tools         # Debug network, eg ping
+      - nc                # Debug network, tcp
+      - nmap              # Debug network, scan
+      - ntpstat           # Debug NTP
+      - jq                # JSON processing
+      - tree              # File system utility
+      - git               # Checkout postgres-backup repo for local build
+      - rsync             # Ansible needs for ansible.posix.synchronize
+      - podman            # Podman engine
+      - podman-compose    # Podman compose (EPEL)
+      - container-tools   # Buildah, Skopeo, CRIU (snapshot container state to disk), Udica (selinux policy generator for containers)
+
+  tasks:
+    - name: "Populate facts"
+      become: true
+      ansible.builtin.service_facts:
+
+    - name: "Set timezone"
+      become: true
+      community.general.timezone:
+        name: "{{ time_zone }}"
+
+    - name: Set hostname to inventory hostname
+      become: true
+      ansible.builtin.hostname:
+        name: "{{ inventory_hostname }}"
+
+    - name: Enable EPEL repository
+      become: true
+      ansible.builtin.dnf:
+        name: epel-release
+        state: present
+
+    - name: "Install packages"
+      become: true
+      ansible.builtin.dnf:
+        name: "{{ packages_install_dnf }}"
+        state: present
+
+    - name: Create a directory if it does not exist
+      ansible.builtin.file:
+        path: /home/{{ ansible_user }}/container-projects
+        state: directory
+        mode: '0755'
+
+    - name: "Enable and start services"
+      become: true
+      ansible.builtin.service:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      with_items: "{{ system_services }}"
+
+### Systemd integration
+    - name: Enable linger for container service user
+      become: true
+      ansible.builtin.command:
+        cmd: "loginctl enable-linger {{ ansible_user }}"
+        creates: "/var/lib/systemd/linger/{{ ansible_user }}"

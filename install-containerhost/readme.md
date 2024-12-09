@@ -22,6 +22,11 @@ Steps:
 1. Run shell scripts in order (first parameter to script is envfile, eg custom.env )
 1. Enjoy your new container host :D
 
+Installable container projects (stack-s): 
+- LAMP stack (Apache + PHP + MariaDB)
+- Zabbix sandbox (Zabbix components + PostgreSQL)
+
+
 Official docs:
 
 TODO
