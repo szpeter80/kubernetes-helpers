@@ -8,6 +8,8 @@ Description={{ container_project_name }} rootless pod (podman-compose)
 [Service]
 Type=simple
 
+Environment="PODMAN_SYSTEMD_UNIT=podman-compose--{{ container_project_name }}.service"
+
 Environment="COMPOSE_FILE=podman-compose.yaml"
 Environment="COMPOSE_PATH_SEPARATOR=:"
 Environment="COMPOSE_PROJECT_NAME={{ container_project_name }}"

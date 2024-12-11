@@ -39,6 +39,13 @@
       ansible.builtin.hostname:
         name: "{{ inventory_hostname }}"
 
+    # I'm sorry, this task should be removed once the required settings are investigated
+    - name: Put SELinux in permissive mode
+      become: true
+      ansible.posix.selinux:
+        policy: targeted
+        state: permissive
+
     - name: Enable EPEL repository
       become: true
       ansible.builtin.dnf:

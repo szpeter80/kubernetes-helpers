@@ -9,7 +9,7 @@ volumes:
 services:
 
   zabbix-server:
-    image: docker.io/zabbix/zabbix-server-pgsql:alpine-7.0-latest
+    image: docker.io/zabbix/zabbix-server-pgsql:alpine-7.2-latest
     ports:
       - 10051:10051
     environment:
@@ -30,7 +30,7 @@ services:
       - postgres
 
   zabbix-web:
-    image: docker.io/zabbix/zabbix-web-nginx-pgsql:alpine-7.0-latest
+    image: docker.io/zabbix/zabbix-web-nginx-pgsql:alpine-7.2-latest
     ports:
       - 8080:8080
       - 8443:8443
@@ -52,14 +52,15 @@ services:
     depends_on:
       - zabbix-server
 
-  zabbix-webservice:
-    image: docker.io/zabbix/zabbix-web-service:alpine-7.0-latest
+  zabbix-web-service:
+    image: docker.io/zabbix/zabbix-web-service:alpine-7.2-latest
     ports:
       - 10053:10053
     environment:
       - TZ=Europe/Budapest
       - LANG=en_US.utf8
-      - ZBX_ALLOWEDIP="localhost,10.0.0.0/8,192.168.0.0/16,172.0.0.0/8"
+      - ZBX_HOSTNAME=zabbix-web-service
+      - ZBX_ALLOWEDIP=localhost,10.0.0.0/8,192.168.0.0/16,172.0.0.0/8
       - ZBX_TLSACCEPT=unencrypted
       - ZBX_IGNOREURLCERTERRORS=1
       - ZBX_TIMEOUT=30
@@ -67,33 +68,39 @@ services:
     restart: unless-stopped
 
   zabbix-agent:
-    image: docker.io/zabbix/zabbix-agent2:alpine-7.0-latest
+    image: docker.io/zabbix/zabbix-agent2:alpine-7.2-latest
     environment:
       - TZ=Europe/Budapest
       - LANG=en_US.utf8
+      - ZBX_HOSTNAME=zabbix-agent
       - ZBX_ZBX_SERVER_HOST="zabbix-server,10.0.0.0/8,192.168.0.0/16,172.0.0.0/8"
       - ZBX_DEBUGLEVEL=3
     restart: unless-stopped
-
-  phppgadmin:
-    # https://hub.docker.com/r/tozd/phppgadmin
-    image: docker.io/tozd/phppgadmin:latest
-    ports:
-      - 9090:80
-    environment:
-      - TZ=Europe/Budapest
-      - LANG=en_US.utf8
-      - PHPPGADMIN_HOST=postgres
-      - PHPPGADMIN_PORT=5432
-      - UPLOAD_LIMIT=100M
-    restart: unless-stopped
-    volumes:
-      - /home/admin/container-projects/zabbix/900-postgresql/phppgadmin/config.inc.php:/etc/phppgadmin/config.inc.php:z
     depends_on:
-      - postgres
+      - zabbix-server
+      
+  # Original PHPPgAdmin is not maintained anymore, so the forked version with patches
+  # can be used from https://github.com/ReimuHakurei/phpPgAdmin
+  # TODO: find a suitable container image for it or build one 
+  ###phppgadmin:
+  ###  # https://hub.docker.com/r/tozd/phppgadmin
+  ###  image: docker.io/tozd/phppgadmin:latest
+  ###  ports:
+  ###    - 9090:80
+  ###  environment:
+  ###    - TZ=Europe/Budapest
+  ###    - LANG=en_US.utf8
+  ###    - PHPPGADMIN_HOST=postgres
+  ###    - PHPPGADMIN_PORT=5432
+  ###    - UPLOAD_LIMIT=100M
+  ###  restart: unless-stopped
+  ###  volumes:
+  ###    - /home/labadmin/container-projects/zabbix/900-postgresql/phppgadmin/config.inc.php:/etc/phppgadmin/config.inc.php:z
+  ###  depends_on:
+  ###    - postgres
 
   postgres:
-    image: docker.io/library/postgres:16-bullseye
+    image: docker.io/library/postgres:17-bullseye
     environment:
       - TZ=Europe/Budapest
       - LANG=en_US.utf8
