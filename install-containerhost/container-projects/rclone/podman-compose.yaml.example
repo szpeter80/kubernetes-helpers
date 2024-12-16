@@ -1,0 +1,22 @@
+---
+### https://docs.docker.com/compose/compose-file/
+
+# Don't forget to update the volume mount paths to contain the actual user homedir who will run the containers
+
+# USAGE:
+# 1 - create rclone config:     podman exec -ti rclone_rclone_svc_1 /bin/bash -c "rclone config"
+# 2 - when asked "Use web browser to automatically authenticate rclone with remote?" say NO and run the command on a desktop with GUI
+
+services:
+
+  rclone_svc:
+    image: docker.io/rclone/rclone:1.68
+    environment:
+      - TZ=Europe/Budapest
+      - LANG=en_US.utf8
+    restart: unless-stopped
+    volumes:
+      - /home/admin/container-projects/rclone/rclone-config:/config/rclone:z,rw
+      - /home/admin/container-projects/rclone/rclone-data:/data:z,rw
+    entrypoint: /bin/sh
+    command: ["-c", "/config/rclone/init.sh && sleep infinity"]
