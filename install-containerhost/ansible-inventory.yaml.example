@@ -14,3 +14,14 @@ all:
       # the interpretrt would be to ensure all but system python is fully uninstalled.
       # From https://stackoverflow.com/questions/67193176/python-module-firewall-not-found
       ansible_python_interpreter: "/usr/bin/python3.9"
+
+
+g_lampstack:
+  hosts:
+
+g_zabbix:
+  hosts:
+
+g_rclone:
+  hosts:
+    
