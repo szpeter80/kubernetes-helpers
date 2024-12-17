@@ -14,9 +14,11 @@ services:
     environment:
       - TZ=Europe/Budapest
       - LANG=en_US.utf8
+      - RCLONE_CMD="rclone sync"
+      - RCLONE_SLEEP="infinity"
     restart: unless-stopped
     volumes:
       - /home/admin/container-projects/rclone/rclone-config:/config/rclone:z,rw
       - /home/admin/container-projects/rclone/rclone-data:/data:z,rw
     entrypoint: /bin/sh
-    command: ["-c", "/config/rclone/init.sh && sleep infinity"]
+    command: ["-c", "/config/rclone/container-entrypoint.sh"]
