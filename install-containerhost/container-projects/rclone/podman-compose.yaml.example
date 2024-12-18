@@ -14,8 +14,14 @@ services:
     environment:
       - TZ=Europe/Budapest
       - LANG=en_US.utf8
-      - RCLONE_CMD="rclone sync"
-      - RCLONE_SLEEP="infinity"
+      - RCLONE_CMD=rclone sync drive://accent-test /data/drive-copy --check-first --inplace --absolute --error - 
+      # Sleep unit is in seconds, other units are not POSIX. 5min=300, 20min=1200, 30min=1800, 1h=3600, 2h=7200, 6h=21600, 12h=43200
+      - RCLONE_SLEEP=6
+      # This file will be touch-ed when an invocation of rclone exits with 0 - you can use it in monitoring 
+      - RCLONE_HEARTBEAT_FN=/data/heartbeat--drive-sync
+      # path will be disassembled and filename will be prepended with a datestring,
+      # resulting in actual report filenames like /data/reports/2024-12-18_1600--drive-copy-report.txt
+      - RCLONE_REPORT_FN=/data/reports/drive-copy-report.txt
     restart: unless-stopped
     volumes:
       - /home/admin/container-projects/rclone/rclone-config:/config/rclone:z,rw
