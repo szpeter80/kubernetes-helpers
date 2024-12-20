@@ -14,7 +14,7 @@ services:
     environment:
       - TZ=Europe/Budapest
       - LANG=en_US.utf8
-      - RCLONE_CMD=rclone sync drive://accent-test /data/drive-copy --check-first --inplace --absolute --error - 
+      - RCLONE_CMD=rclone sync drive://accent-test /data/drive-copy --check-first --inplace --absolute --order-by name --error - 
       # Sleep unit is in seconds, other units are not POSIX. 5min=300, 20min=1200, 30min=1800, 1h=3600, 2h=7200, 6h=21600, 12h=43200
       - RCLONE_SLEEP=6
       # This file will be touch-ed when an invocation of rclone exits with 0 - you can use it in monitoring 
