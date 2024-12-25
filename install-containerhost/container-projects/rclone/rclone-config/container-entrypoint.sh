@@ -5,6 +5,9 @@
 #   if a foreground process is running 
 # - check in the main loop if we need to exit
 
+_set_dt() {
+	DT="$(date '+%Y-%m-%d_%H%M')"
+}
 
 _term() {
 
@@ -25,6 +28,9 @@ trap _term HUP INT QUIT TERM
 
 ###############################################################################
 
+_set_dt
+BDIR=$(dirname "${RCLONE_LOG_FN}")
+BFN=$(basename "${RCLONE_LOG_FN}")
 TERM_RECEIVED="N"
 
 echo 
@@ -55,36 +61,43 @@ then
     exit 1
 fi;
 
+echo "ENTRYPOINT: creating initial directory list"
+echo "RCLONE_DIRLIST_CMD= $RCLONE_DIRLIST_CMD"
+DIRLIST_FN="${BDIR}/${DT}--dirlist.txt" 
+${RCLONE_DIRLIST_CMD} >> "${DIRLIST_FN}" &
+wait $!
 
 while true;
 do
 
 
-	if [[ "${TERM_RECEIVED}" == "Y" ]]; then
+	if [ "${TERM_RECEIVED}" = "Y" ]; then
 	  echo "ENTRYPOINT: termination request received in main loop, exiting"
 	  date
 	  exit 0
 	fi
 	
-    DT="$(date '+%Y-%m-%d_%H%M')"
+    _set_dt
       
-    BDIR=$(dirname "${RCLONE_REPORT_FN}")
-    BFN=$(basename "${RCLONE_REPORT_FN}")
-    REPORT_FN="${BDIR}/${DT}--${BFN}" 
 
-    echo "$(date '+%Y-%m-%d %H:%M')    executing rclone" | tee -a "${REPORT_FN}"
-    echo "$(date '+%Y-%m-%d %H:%M')    RCLONE_CMD= $RCLONE_CMD" | tee -a "${REPORT_FN}"
-    echo >> "${REPORT_FN}"
+    LOG_FN="${BDIR}/${DT}--${BFN}" 
+
+    echo "$(date '+%Y-%m-%d %H:%M')    executing rclone" | tee -a "${LOG_FN}"
+    echo "$(date '+%Y-%m-%d %H:%M')    RCLONE_CMD= $RCLONE_CMD" | tee -a "${LOG_FN}"
+    echo >> "${LOG_FN}"
     
     # combined report truncates the file so we need to use stdout and redirect to append to it
-    { ${RCLONE_CMD} --combined - >> "${REPORT_FN}" && touch "${RCLONE_HEARTBEAT_FN}"; } &
+    { ${RCLONE_CMD} --log-file "${LOG_FN}"    --differ "${BDIR}/${DT}--to-be-updated.txt"     --missing-on-dst "${BDIR}/${DT}--to-be-downloaded.txt"   --missing-on-src "${BDIR}/${DT}--to-be-deleted.txt"   && touch "${RCLONE_HEARTBEAT_FN}"; } &
     wait $!
     
+    echo "$(date '+%Y-%m-%d %H:%M')    deletion of zero length files in log dir" | tee -a "${LOG_FN}"
+    find "${BDIR}/" -size 0 -delete | tee -a "${LOG_FN}"
     
-    echo "$(date '+%Y-%m-%d %H:%M')    execution finished" | tee -a "${REPORT_FN}"
+    echo "$(date '+%Y-%m-%d %H:%M')    execution finished" | tee -a "${LOG_FN}"
     echo
 
     # safety sleep, to avoid extreme load generation if RCLONE_SLEEP is missing or malformed
     { sleep "${RCLONE_SLEEP}"  ||  sleep 5 ; } &
     wait $!
 done;
+

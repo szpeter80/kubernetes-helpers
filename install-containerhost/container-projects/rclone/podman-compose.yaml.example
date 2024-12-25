@@ -5,7 +5,7 @@
 
 # USAGE:
 # 1 - create rclone config:     podman exec -ti rclone_rclone_svc_1 /bin/bash -c "rclone config"
-# 2 - when asked "Use web browser to automatically authenticate rclone with remote?" say NO and run the command on a desktop with GUI
+# 2 - when asked "Use web browser to automatically authenticate rclone with remote?" say NO
 
 services:
 
@@ -14,14 +14,27 @@ services:
     environment:
       - TZ=Europe/Budapest
       - LANG=en_US.utf8
-      - RCLONE_CMD=rclone sync drive://accent-test /data/drive-copy --check-first --inplace --absolute --order-by name --error - 
-      # Sleep unit is in seconds, other units are not POSIX. 5min=300, 20min=1200, 30min=1800, 1h=3600, 2h=7200, 6h=21600, 12h=43200
-      - RCLONE_SLEEP=6
-      # This file will be touch-ed when an invocation of rclone exits with 0 - you can use it in monitoring 
-      - RCLONE_HEARTBEAT_FN=/data/heartbeat--drive-sync
+
+      # Even the maximum backlog is finite, if the remote contains too many files, 
+      # ordering will be done per-page, resulting in not full alphabetical order
+      # This command will be appended by the entrypoint script with logging arguments
+      - RCLONE_CMD=rclone sync drive: /data/myproject-data --check-first --inplace --absolute --order-by name --max-backlog=-1 
+
+      # Entrypoint creates an initial directory list when the container starts, this is the full cmd for it
+      - RCLONE_DIRLIST_CMD=rclone lsf drive: --recursive --format tsp 
+
       # path will be disassembled and filename will be prepended with a datestring,
-      # resulting in actual report filenames like /data/reports/2024-12-18_1600--drive-copy-report.txt
-      - RCLONE_REPORT_FN=/data/reports/drive-copy-report.txt
+      # resulting in actual log filenames like /data/reports/2024-12-18_1600--myproject-log.txt
+      # The directory part will be used to generate file list of planned updates, new file creation and file deletion
+      - RCLONE_LOG_FN=/data/reports/myproject-log.txt
+
+      # Sleep between two invocation, value  is in seconds, other units are not POSIX. 
+      # 5min=300, 20min=1200, 30min=1800, 1h=3600, 2h=7200, 6h=21600, 12h=43200
+      - RCLONE_SLEEP=60
+
+      # This file will be touch-ed when an invocation of rclone exits with 0 - you can use it in monitoring
+      # Do not place it in the runtime log directory because 0-length files are deleted there on each run
+      - RCLONE_HEARTBEAT_FN=/data/heartbeat--myproject
     restart: unless-stopped
     volumes:
       - /home/admin/container-projects/rclone/rclone-config:/config/rclone:z,rw
