@@ -7,8 +7,9 @@ volumes:
 services:
 
   haproxy:
+    # https://www.haproxy.com/documentation/haproxy-configuration-manual/latest/
     # https://hub.docker.com/_/haproxy
-    image: docker.io/library/haproxy:3.0.4-alpine
+    image: docker.io/library/haproxy:3.1.1-alpine
     ports:
       - 80:80
       - 443:443
@@ -66,8 +67,10 @@ services:
 
 
   mariadb:
+    # For MySQL migration: https://mariadb.com/kb/en/mariadb-vs-mysql-compatibility/
     # https://hub.docker.com/_/mariadb
-    image: docker.io/library/mariadb:10.11.8-ubi9
+    #image: docker.io/library/mariadb:10.11.8-ubi9
+    image: docker.io/library/mariadb:10.4.34-focal
     environment:
       - MYSQL_ROOT_PASSWORD=foobar
       - MYSQL_DATABASE=projectdb

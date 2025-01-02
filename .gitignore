@@ -42,3 +42,11 @@ config.user.inc.php
 haproxy.cfg
 # PHPPgAdmin
 config.inc.php
+
+# PKI certificates, keys etc
+*.cert
+*.crt
+*.csr
+*.key
+*.pkcs12
+*.pem

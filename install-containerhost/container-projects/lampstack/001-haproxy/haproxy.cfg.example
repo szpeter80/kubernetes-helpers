@@ -1,0 +1,66 @@
+global
+  daemon
+  maxconn 5000
+  log stdout  format raw  local0  warning
+
+resolvers container-dns
+  accepted_payload_size 8192
+  parse-resolv-conf
+
+defaults
+  mode http
+  timeout connect 5000ms
+  timeout client  5000ms
+  timeout server 60000ms
+  option forwardfor
+
+
+frontend stats
+  mode http
+  bind *:8404
+  stats enable
+  stats admin if TRUE
+  stats uri /stats
+  stats refresh 10s
+
+
+frontend containers-fe-80
+  bind *:80
+  
+  http-request redirect   code 301   prefix https://snakeoil.example.com
+
+
+frontend containers-fe-443
+  bind *:443 ssl crt /etc/ssl/certs
+  http-request redirect scheme https code 301 unless { ssl_fc }
+  http-request del-header X-Forwarded-For
+
+  # Redirect root path ( / ) and app path w/o trailin slash to /myapp/
+  http-request redirect   code 301 location /myapp/    if { path / } || { path /myapp }
+
+  # Redirect pma w/o trailing slash to slash-suffixed
+  http-request redirect   code 301 location /pma/        if { path /pma }
+
+  default_backend myapp-be
+  use_backend myapp-be       if { path_beg /myapp/ }
+
+  use_backend phpmyadmin-be    if { path_beg /pma/ }
+
+
+backend myapp-be
+  server myapp-1 nginx:80  check  resolvers container-dns  init-addr none
+  http-request set-header X-Forwarded-Uri %[url]
+
+  ### Before HAProxy, there is a port forward 443->8443 on the server
+  # http-request set-header X-Forwarded-Port %[dst_port]
+  http-request set-header X-Forwarded-Port 443
+
+  http-request add-header X-Forwarded-Proto https if { ssl_fc }
+
+
+backend phpmyadmin-be
+  server phpmyadmin-1 pma:80  check  resolvers container-dns  init-addr none
+  http-request set-path "%[path,regsub(^/pma,/)]"
+  http-request set-header X-Forwarded-Port %[dst_port]
+  # http-request set-header X-Forwarded-Port 8443
+  http-request add-header X-Forwarded-Proto https if { ssl_fc }
