@@ -1,3 +1,4 @@
+# https://www.haproxy.com/documentation/haproxy-configuration-manual/latest/
 global
   daemon
   maxconn 5000
@@ -17,7 +18,7 @@ defaults
 
 frontend stats
   mode http
-  bind *:8404
+  bind *:8080
   stats enable
   stats admin if TRUE
   stats uri /stats
@@ -31,7 +32,9 @@ frontend containers-fe-80
 
 
 frontend containers-fe-443
-  bind *:443 ssl crt /etc/ssl/certs
+  # Strict SNI has a side effect: startup is possible with empty dir, also no default cert
+  # https://www.haproxy.com/documentation/haproxy-configuration-manual/latest/#5.1-strict-sni
+  bind *:443 ssl crt /etc/ssl/certs strict-sni
   http-request redirect scheme https code 301 unless { ssl_fc }
   http-request del-header X-Forwarded-For
 
