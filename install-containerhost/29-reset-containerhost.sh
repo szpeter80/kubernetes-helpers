@@ -4,7 +4,7 @@ DEFAULT_ENV_REALPATH="../default.env"
 # shellcheck disable=SC1090
 . "$DEFAULT_ENV_REALPATH"
 
-ENVFILE="$1"
+ENVFILE="./custom.env"
 if [ -f "${ENVFILE}" ];
 then
     echo "Sourcing environment file: ${ENVFILE}"
@@ -33,7 +33,7 @@ then
   exit 1
 fi
 
-ansible-playbook -i ./ansible-inventory.yaml  29-reset-containerhost.yaml  --verbose -v 
+ansible-playbook -i ./ansible-inventory.yaml  29-reset-containerhost.yaml  --verbose -v --limit "$1"
 
 deactivate
 

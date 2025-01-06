@@ -1,16 +1,17 @@
 ---
-- name: Reset (remove all data files) containerhost
-  hosts: all
-  become: false
 
+- name: Reset (remove all data files) containerhost
+  become: false
+  hosts:
+    all
 
   tasks:
-
     - name: Reset containerhost
       ansible.builtin.shell:
         cmd: |
           podman rm --force --all
           podman rmi --force --all
+          podman pod rm -af
           rm -rf /home/{{ ansible_user }}/container-projects
           rm -rf /home/{{ ansible_user }}/.config
           rm -rf /home/{{ ansible_user }}/.local
@@ -19,6 +20,3 @@
       args:
         chdir: .
         creates: /tmp/run-task-unconditionally
-
-#    - name: "Reboot the machine"
-#      ansible.builtin.reboot:

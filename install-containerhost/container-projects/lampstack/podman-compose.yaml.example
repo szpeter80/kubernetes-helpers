@@ -20,8 +20,8 @@ services:
       - TZ=Europe/Budapest
     restart: unless-stopped
     volumes:
-      - /home/admin/container-projects/lampstack-prod/001-haproxy/certs:/etc/ssl/certs:z,ro
-      - /home/admin/container-projects/lampstack-prod/001-haproxy/haproxy.cfg:z,ro
+      - /home/admin/container-projects/lampstack/001-haproxy/certs:/etc/ssl/certs:z,ro
+      - /home/admin/container-projects/lampstack/001-haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:z,ro
 
   nginx:
     ### https://hub.docker.com/_/nginx
@@ -32,7 +32,7 @@ services:
       - TZ=Europe/Budapest
     restart: unless-stopped
     volumes:
-      - /path/to/project/app:/app:z,ro
+      - /home/admin/container-projects/lampstack/999-app-example:/app:z,ro
     depends_on:
       - php-fpm
 
@@ -46,7 +46,7 @@ services:
 
     restart: unless-stopped
     volumes:
-      - /path/to/project/app:/app:z,ro
+      - /home/admin/container-projects/lampstack/999-app-example:/app:z,ro
     depends_on:
       - mariadb
 
@@ -61,7 +61,7 @@ services:
       - UPLOAD_LIMIT=100M
     restart: unless-stopped
     volumes:
-      - /home/admin/container-projects/lampstack-prod/900-mariadb/phpmyadmin/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php:z
+      - /home/admin/container-projects/lampstack/900-mariadb/phpmyadmin/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php:z
     depends_on:
       - mariadb
 
@@ -79,7 +79,7 @@ services:
     restart: unless-stopped
     volumes:
       - mariadb-data:/var/lib/mysql
-      - /home/admin/container-projects/lampstack-prod/900-mariadb/mariadb-backups:/mnt/mariadb-backups:z,ro
+      - /home/admin/container-projects/lampstack/900-mariadb/mariadb-backups:/mnt/mariadb-backups:z,ro
 
   mariadb-backup:
     image: localhost/example-org/mariadb-backup:latest
@@ -91,6 +91,6 @@ services:
       - BACKUP_RETENTION_DAYS=30
     restart: unless-stopped
     volumes:
-      - /home/admin/container-projects/lampstack-prod/900-mariadb/mariadb-backups:/mnt/mariadb-backups:z
+      - /home/admin/container-projects/lampstack/900-mariadb/mariadb-backups:/mnt/mariadb-backups:z
     depends_on:
       - mariadb
