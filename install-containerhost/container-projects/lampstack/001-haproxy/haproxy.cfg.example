@@ -18,23 +18,23 @@ defaults
 
 frontend stats
   mode http
-  bind *:8080
+  bind *:8081
   stats enable
   stats admin if TRUE
   stats uri /stats
   stats refresh 10s
 
 
-frontend containers-fe-80
-  bind *:80
+frontend containers-fe-8080
+  bind *:8080
   
   http-request redirect   code 301   prefix https://snakeoil.example.com
 
 
-frontend containers-fe-443
+frontend containers-fe-8443
   # Strict SNI has a side effect: startup is possible with empty dir, also no default cert
   # https://www.haproxy.com/documentation/haproxy-configuration-manual/latest/#5.1-strict-sni
-  bind *:443 ssl crt /etc/ssl/certs strict-sni
+  bind *:8443 ssl crt /etc/ssl/certs strict-sni
   http-request redirect scheme https code 301 unless { ssl_fc }
   http-request del-header X-Forwarded-For
 

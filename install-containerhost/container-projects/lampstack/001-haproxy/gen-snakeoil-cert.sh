@@ -8,3 +8,10 @@ openssl req -new \
 
 # Blindly copying extensions from the CRT is a bad practice for a real CA, but will do for a dummy one
 openssl x509 -req -days 3650 -in ./certs/snakeoil.csr -signkey ./certs/snakeoil.key -out ./certs/snakeoil.crt -copy_extensions copyall
+
+cat ./certs/snakeoil.crt >> ./certs/snakeoil.pem
+cat ./certs/snakeoil.key >> ./certs/snakeoil.pem
+
+rm -f ./certs/snakeoil.csr
+rm -f ./certs/snakeoil.crt
+rm -f ./certs/snakeoil.key
