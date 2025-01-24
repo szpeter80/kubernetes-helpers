@@ -30,6 +30,9 @@ repositories:
   - name: kubernetes-dashboard
     url: https://kubernetes.github.io/dashboard/
 
+  - name: harbor
+    url: https://helm.goharbor.io
+
 
 helmDefaults:
   atomic: true
@@ -102,5 +105,27 @@ releases:
     # in "needs" you have to use the "namespace/release" notation
     needs:
       - certmanager/certmanager
+      - longhorn/longhorn
     installed: false
+
+  # Harbor
+  # https://github.com/goharbor/harbor-helm
+  #
+  - name: harbor
+    inherit:
+      - template: default
+    chart: harbor/harbor
+    # helm search repo harbor
+    # Chart version 1.16.2 --> 2.12.2
+    version: 1.16.2
+    needs:
+      - certmanager/certmanager
+      - longhorn/longhorn
+    installed: true
+
+
+
+
+
+
 
