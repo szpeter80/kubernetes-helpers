@@ -33,6 +33,9 @@ repositories:
   - name: harbor
     url: https://helm.goharbor.io
 
+  - name: minio
+    url: https://charts.min.io/
+
 
 helmDefaults:
   atomic: true
@@ -78,8 +81,8 @@ releases:
     inherit:
       - template: default
     chart: longhorn/longhorn
-    version: 1.7.2
-    installed: false
+    version: 1.8.0
+    installed: true
 
   # Cert-Manager
   # https://cert-manager.io/docs/installation/helm/
@@ -90,14 +93,14 @@ releases:
     # helm search repo cert-manager
     # Chart version equals to appversion
     version: 1.16.1
-    installed: false
+    installed: true
 
   # Kubernetes Dashboard
   - name: kube-dashboard
     inherit:
       - template: default
     chart: kubernetes-dashboard/kubernetes-dashboard
-    version: 7.10.0
+    version: 7.10.1
     # This worth a word...
     # In most cases you do not need to specify the NameSpace where a given 
     # release is installed, but as the default template here forces all releases
@@ -106,11 +109,10 @@ releases:
     needs:
       - certmanager/certmanager
       - longhorn/longhorn
-    installed: false
+    installed: true
 
   # Harbor
   # https://github.com/goharbor/harbor-helm
-  #
   - name: harbor
     inherit:
       - template: default
@@ -123,9 +125,17 @@ releases:
       - longhorn/longhorn
     installed: true
 
-
-
-
-
-
-
+  # Minio
+  # "Vanilla" Minio Helm chart
+  # https://github.com/minio/minio/tree/master/helm/minio
+  - name: minio
+    inherit:
+      - template: default
+    chart: minio/harbor
+    # helm search repo harbor
+    # Chart version 1.16.2 --> 2.12.2
+    version: 1.16.2
+    needs:
+      - certmanager/certmanager
+      - longhorn/longhorn
+    installed: false
