@@ -48,24 +48,7 @@ expose:
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
     # ingress-specific labels
     labels: {}
-  nodePort:
-    # The name of NodePort service
-    name: harbor
-    ports:
-      http:
-        # The service port Harbor listens on when serving HTTP
-        port: 80
-        # The node port Harbor listens on when serving HTTP
-        nodePort: 30002
-      https:
-        # The service port Harbor listens on when serving HTTPS
-        port: 443
-        # The node port Harbor listens on when serving HTTPS
-        nodePort: 30003
-    # Annotations on the nodePort service
-    annotations: {}
-    # nodePort-specific labels
-    labels: {}
+
 
 # The external URL for Harbor core service. It is used to
 # 1) populate the docker/helm commands showed on portal
@@ -315,7 +298,12 @@ nginx:
   extraEnvVars: []
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity:
+  preferredDuringSchedulingIgnoredDuringExecution:
+    nodeSelectorTerms:
+    - matchExpressions:
+      - key: node-role.kubernetes.io/control-plane
+        operator: DoesNotExist
   # Spread Pods across failure-domains like regions, availability zones or nodes
   topologySpreadConstraints: []
   # - maxSkew: 1
@@ -343,7 +331,13 @@ portal:
   extraEnvVars: []
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: node-role.kubernetes.io/control-plane
+          operator: DoesNotExist
+
   # Spread Pods across failure-domains like regions, availability zones or nodes
   topologySpreadConstraints: []
   # - maxSkew: 1
@@ -384,7 +378,13 @@ core:
   extraEnvVars: []
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: node-role.kubernetes.io/control-plane
+          operator: DoesNotExist
+
   # Spread Pods across failure-domains like regions, availability zones or nodes
   topologySpreadConstraints: []
   # - maxSkew: 1
@@ -464,7 +464,13 @@ jobservice:
   extraEnvVars: []
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: node-role.kubernetes.io/control-plane
+          operator: DoesNotExist
+
   # Spread Pods across failure-domains like regions, availability zones or nodes
   topologySpreadConstraints:
   # - maxSkew: 1
@@ -518,7 +524,13 @@ registry:
   revisionHistoryLimit: 10
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: node-role.kubernetes.io/control-plane
+          operator: DoesNotExist
+
   # Spread Pods across failure-domains like regions, availability zones or nodes
   topologySpreadConstraints: []
   # - maxSkew: 1
@@ -600,7 +612,12 @@ trivy:
   extraEnvVars: []
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: node-role.kubernetes.io/control-plane
+          operator: DoesNotExist
   # Spread Pods across failure-domains like regions, availability zones or nodes
   topologySpreadConstraints: []
   # - maxSkew: 1
@@ -691,7 +708,12 @@ database:
     extraEnvVars: []
     nodeSelector: {}
     tolerations: []
-    affinity: {}
+    affinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-role.kubernetes.io/control-plane
+            operator: DoesNotExist
     ## The priority class to run the pod as
     priorityClassName:
     # containers to be run before the controller's container starts.
@@ -746,7 +768,12 @@ redis:
     extraEnvVars: []
     nodeSelector: {}
     tolerations: []
-    affinity: {}
+    affinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: node-role.kubernetes.io/control-plane
+            operator: DoesNotExist
     ## The priority class to run the pod as
     priorityClassName:
     # containers to be run before the controller's container starts.
@@ -787,7 +814,12 @@ exporter:
   podLabels: {}
   nodeSelector: {}
   tolerations: []
-  affinity: {}
+  affinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: node-role.kubernetes.io/control-plane
+          operator: DoesNotExist
   # Spread Pods across failure-domains like regions, availability zones or nodes
   topologySpreadConstraints: []
   ## The priority class to run the pod as
