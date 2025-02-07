@@ -33,6 +33,6 @@ then
   exit 1
 fi
 
-ansible-playbook -i ./ansible-inventory.yaml  23-install-containerhost-rclone.yaml  --verbose -v 
+ansible-playbook -i ./ansible-inventory.yaml  30-install-containerhost-lampstack.yaml --tags update --verbose -v 
 
 deactivate

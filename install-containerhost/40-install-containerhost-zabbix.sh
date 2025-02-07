@@ -33,7 +33,6 @@ then
   exit 1
 fi
 
-ansible-playbook -i ./ansible-inventory.yaml  29-reset-containerhost.yaml  --verbose -v --limit "$1"
+ansible-playbook -i ./ansible-inventory.yaml  40-install-containerhost-zabbix.yaml  --verbose -v 
 
 deactivate
-

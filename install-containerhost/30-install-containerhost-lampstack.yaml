@@ -15,6 +15,7 @@
 
   tasks:
     - name: "Populate facts"
+      tags: update
       become: true
       ansible.builtin.service_facts:
 
@@ -37,6 +38,7 @@
       notify: "Restart firewalld"
 
     - name: "Copy container project files"
+      tags: update
       # https://docs.ansible.com/ansible/latest/collections/ansible/posix/synchronize_module.html#parameters
       ansible.posix.synchronize:
         mode: push
@@ -44,6 +46,30 @@
         dest: "/home/{{ ansible_user }}/container-projects/"
         # delete: true
         recursive: true
+
+
+###############################################################################
+### Local build of mariadb-backup container
+###############################################################################
+
+    - name: Git checkout "mariadb-backup" project
+      # noqa: latest
+      ansible.builtin.git:
+        repo: 'https://github.com/szpeter80/misc.git'
+        dest: /home/{{ ansible_user }}/container-projects/{{ container_project_name }}/900-mariadb/mariadb-backup/repo
+
+
+    - name: Build "mariadb-backup" image
+      containers.podman.podman_image:
+        name: local/mariadb-backup:latest
+        path: /home/{{ ansible_user }}/container-projects/{{ container_project_name }}/900-mariadb/mariadb-backup/repo/containers/mariadb-backup
+        build:
+          # cache: false
+          rm: true
+          format: oci
+          annotation:
+            info: "Locally built image"
+
 
 ###############################################################################
 ### Systemd integration
@@ -60,11 +86,12 @@
 
 
     - name: Enable and start (user) systemd unit for container project {{ container_project_name }}
+      tags: update
       ansible.builtin.systemd_service:
         scope: user
         name: "podman-compose--{{ container_project_name }}"
         enabled: true
-        state: started
+        state: restarted
 
 ###############################################################################
 ### Handlers

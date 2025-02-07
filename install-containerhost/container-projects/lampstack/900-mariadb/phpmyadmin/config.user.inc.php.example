@@ -1,0 +1,3 @@
+<?php
+
+$cfg['PmaAbsoluteUri']='https://snakeoil.example.com/phpmyadmin/';
