@@ -30,13 +30,15 @@ if [ "$1" = "" ];
 then
     echo "No --limit given, the current inventory:"
     ansible-inventory -i ansible-inventory.yaml --graph
-    exit
+    deactivate
+    exit 1
 fi
 
 
 if [ ! -f "$ANSIBLE_SSH_KEY" ];
 then
   echo "Ansible SSH key file ($ANSIBLE_SSH_KEY) not found, did you forget to create ?"
+  deactivate
   exit 1
 fi
 
