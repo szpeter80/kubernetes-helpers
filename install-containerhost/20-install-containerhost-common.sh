@@ -26,6 +26,13 @@ fi
 # shellcheck disable=SC1091
 . "${VENV_DIR}"/bin/activate
 
+if [ "$1" = "" ];
+then
+    echo "No --limit given, the current inventory:"
+    ansible-inventory -i ansible-inventory.yaml --graph
+    exit
+fi
+
 
 if [ ! -f "$ANSIBLE_SSH_KEY" ];
 then
@@ -33,6 +40,6 @@ then
   exit 1
 fi
 
-ansible-playbook -i ./ansible-inventory.yaml  20-install-containerhost-common.yaml  --verbose -v 
+ansible-playbook -i ./ansible-inventory.yaml  20-install-containerhost-common.yaml --limit all --verbose -v
 
 deactivate

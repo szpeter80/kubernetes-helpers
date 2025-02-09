@@ -1,6 +1,6 @@
 ---
 - name: Install and configure container host(s) common settings
-  hosts: all
+  hosts: "{{ ansible_limit | default(omit) }}"
   become: false
 
 

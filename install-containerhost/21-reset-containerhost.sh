@@ -26,6 +26,13 @@ fi
 # shellcheck disable=SC1091
 . "${VENV_DIR}"/bin/activate
 
+if [ "$1" = "" ];
+then
+    echo "No --limit given, the current inventory:"
+    ansible-inventory -i ansible-inventory.yaml --graph
+    exit
+fi
+
 
 if [ ! -f "$ANSIBLE_SSH_KEY" ];
 then

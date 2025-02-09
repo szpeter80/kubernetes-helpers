@@ -2,8 +2,7 @@
 
 - name: Reset (remove all data files) containerhost
   become: false
-  hosts:
-    all
+  hosts: "{{ ansible_limit | default(omit) }}"
 
   tasks:
     - name: Reset containerhost
