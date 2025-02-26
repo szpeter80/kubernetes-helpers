@@ -82,7 +82,8 @@ do
 
     LOG_FN="${BDIR}/${DT}--${BFN}" 
 
-    echo "$(date '+%Y-%m-%d %H:%M')    executing rclone" | tee -a "${LOG_FN}"
+    echo "$(date '+%Y-%m-%d %H:%M')    executing rclone"  | tee -a "${LOG_FN}"
+    echo "$(date '+%Y-%m-%d %H:%M')    $(rclone version)" | tee -a "${LOG_FN}"
     echo "$(date '+%Y-%m-%d %H:%M')    RCLONE_CMD= $RCLONE_CMD" | tee -a "${LOG_FN}"
     echo >> "${LOG_FN}"
     
