@@ -6,6 +6,7 @@ all:
     ansible_managed: 'Ansible managed: {file} modified on %Y-%m-%d %H:%M:%S by {uid} on {host}'
 
   hosts:
+    # Containerhost script will set system hostname to the inventory hostname provided
     containerhost.example.com:
       ansible_host: 1.2.3.4
       ansible_user: admin
