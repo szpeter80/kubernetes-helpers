@@ -9,7 +9,7 @@ volumes:
 services:
 
   zabbix-server:
-    image: docker.io/zabbix/zabbix-server-pgsql:alpine-7.2-latest
+    image: docker.io/zabbix/zabbix-server-pgsql:alpine-7.4-latest
     ports:
       - 10051:10051
     environment:
@@ -30,7 +30,7 @@ services:
       - postgres
 
   zabbix-web:
-    image: docker.io/zabbix/zabbix-web-nginx-pgsql:alpine-7.2-latest
+    image: docker.io/zabbix/zabbix-web-nginx-pgsql:alpine-7.4-latest
     ports:
       - 8080:8080
       - 8443:8443
@@ -53,7 +53,7 @@ services:
       - zabbix-server
 
   zabbix-web-service:
-    image: docker.io/zabbix/zabbix-web-service:alpine-7.2-latest
+    image: docker.io/zabbix/zabbix-web-service:alpine-7.4-latest
     ports:
       - 10053:10053
     environment:
@@ -68,7 +68,7 @@ services:
     restart: unless-stopped
 
   zabbix-agent:
-    image: docker.io/zabbix/zabbix-agent2:alpine-7.2-latest
+    image: docker.io/zabbix/zabbix-agent2:alpine-7.4-latest
     environment:
       - TZ=Europe/Budapest
       - LANG=en_US.utf8
