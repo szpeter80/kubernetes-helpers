@@ -1,24 +1,6 @@
 #!/bin/bash
-DEFAULT_ENV_REALPATH="../default.env"
 
-# shellcheck disable=SC1090
-. "$DEFAULT_ENV_REALPATH"
-
-ENVFILE="./custom.env"
-if [ -f "${ENVFILE}" ];
-then
-    echo "Sourcing environment file: ${ENVFILE}"
-    # shellcheck disable=SC1090
-    source "${ENVFILE}"
-else
-    echo "Environment file (${ENVFILE}) not found, using defaults from $DEFAULT_ENV_REALPATH"
-fi
-
-if [ "${DEBUG}" = "1" ];
-then
-    set -x
-fi
-
+source ./00-setup-shell-env.sh
 
 ###############################################################################
 
