@@ -22,7 +22,12 @@
       - rsync             # Ansible needs for ansible.posix.synchronize
       - podman            # Podman engine
       - podman-compose    # Podman compose (EPEL)
-      - container-tools   # Buildah, Skopeo, CRIU (snapshot container state to disk), Udica (selinux policy generator for containers)
+      ##This is for RHEL 9, maybe 8
+      ##- container-tools   # Buildah, Skopeo, CRIU (snapshot container state to disk), Udica (selinux policy generator for containers)
+      # No container-tools on rhel10
+      - buildah
+      - skopeo
+
 
   tasks:
     - name: "Populate facts"
