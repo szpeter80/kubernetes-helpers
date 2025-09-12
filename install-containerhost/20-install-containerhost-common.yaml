@@ -16,6 +16,7 @@
       - nc                # Debug network, tcp
       - nmap              # Debug network, scan
       - ntpstat           # Debug NTP
+      - openssl           # Manage and debug SSL / PKI
       - jq                # JSON processing
       - tree              # File system utility
       - git               # Checkout postgres-backup repo for local build
