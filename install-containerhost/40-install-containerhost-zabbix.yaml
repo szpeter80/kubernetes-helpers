@@ -17,6 +17,15 @@
       become: true
       ansible.builtin.service_facts:
 
+    - name: Configure unprivileged ports in sysctl
+      become: true
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_unprivileged_port_start
+        value: '80'
+        sysctl_set: true
+        state: present
+        reload: true
+
     - name: "Set up host firewall"
       become: true
       ansible.posix.firewalld:
