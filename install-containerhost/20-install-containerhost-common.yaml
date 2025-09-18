@@ -11,7 +11,7 @@
       - "firewalld"
 
     packages_install_dnf:
-      - bash_completion   # Needed for "podman completion bash"
+      - bash-completion   # Needed for "podman completion bash"
       - bind-utils        # Debug DNS
       - net-tools         # Debug network, eg ping
       - nc                # Debug network, tcp
