@@ -65,6 +65,15 @@
         name: "{{ packages_install_dnf }}"
         state: present
 
+    - name: Ensure podman completion line is in .bashrc
+      ansible.builtin.lineinfile:
+        path: "/home/{{ ansible_user }}/.bashrc"
+        line: 'eval "$(podman completion bash)"'
+        create: yes
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0644'
+
     - name: Create a directory if it does not exist
       ansible.builtin.file:
         path: /home/{{ ansible_user }}/container-projects
