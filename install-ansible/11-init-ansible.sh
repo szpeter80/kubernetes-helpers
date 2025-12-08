@@ -57,6 +57,15 @@ log_path=ansible-log.txt
 EOF
 fi
 
+if [ ! -d "./roles" ];
+then
+    mkdir ./roles
+fi
+
+if [ ! -d "./collections" ];
+then
+    mkdir ./collections
+fi
 
 if [ ! -f "${ANSIBLE_SSH_KEY}" ];
 then

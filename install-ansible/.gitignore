@@ -1,4 +1,7 @@
 .venv
+roles
+collections
+
 inventory.yml
 ansible_ssh_key*
 ansible.cfg
