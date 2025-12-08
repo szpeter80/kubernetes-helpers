@@ -9,6 +9,11 @@ source ./00-setup-shell-env.sh
 source "${VENV_DIR}"/bin/activate
 
 
-ansible -m reboot --become --verbose all
+if [ ! -f "$ANSIBLE_SSH_KEY" ];
+then
+  echo "Ansible SSH key file ($ANSIBLE_SSH_KEY) not found, did you forget to create ?"
+fi
+
+ansible -m apt -a "update_cache=yes upgrade=yes" --become --verbose all
 
 deactivate
