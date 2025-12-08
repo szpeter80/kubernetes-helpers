@@ -15,7 +15,7 @@ all:
       # the system python, causing the ansible uploaded code to remote to fail. An alternate solution to pinning
       # the interpreter would be to ensure all but system python is fully uninstalled.
       # From https://stackoverflow.com/questions/67193176/python-module-firewall-not-found
-      ansible_python_interpreter: "/usr/bin/python3.9"
+      ansible_python_interpreter: "/usr/bin/python3"
 
 
 g_lampstack:

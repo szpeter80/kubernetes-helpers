@@ -1,65 +1,72 @@
 #!/bin/bash
 
+# shellcheck source=./00-setup-shell-env.sh
 source ./00-setup-shell-env.sh
 
 ###############################################################################
 
 
-echo "Virtual environment directory: ${VENV_DIR}"
+echo -e "\nVirtual environment directory: ${VENV_DIR}\n\n"
 
 if [ ! -d "${VENV_DIR}" ];
 then
-    echo "Virtual environment not found, creating ..."
-    $PYTHON_EXECUTABLE_PATH -m venv "${VENV_DIR}"
+    echo -e "\nVirtual environment not found, creating ... \n\n"
+    ${PYTHON_EXECUTABLE_PATH} -m venv "${VENV_DIR}"
+    source "${VENV_DIR}"/bin/activate 
 
-    . "${VENV_DIR}"/bin/activate || exit 1
+    echo -e "\nUpdating pip ... \n\n"
+    # "python" from now on point to the exact python used to set up the venv
+    python -m pip install --upgrade pip
 
-    $PYTHON_EXECUTABLE_PATH -m pip install --upgrade pip
     if [ -f requirements.txt ];
     then
+        echo -e "\nInstalling requirements.txt ... \n\n"
         pip install --upgrade --requirement requirements.txt
     fi
 
     pip list --outdated
 
-    echo "Update the dependencies by running 'pip freeze --local --requirement requirements.txt >requirements.txt' inside the virtual env"
+    echo -e "\nUpdate the dependencies by running 'pip freeze --local --requirement requirements.txt >requirements.txt' inside the virtual env\n\n"
 
     deactivate
 fi
 
-# shellcheck disable=SC1091
-. "${VENV_DIR}"/bin/activate || exit 1
+
+source "${VENV_DIR}"/bin/activate 
 
 if [ ! -f ansible.cfg.example ];
 then
+    echo -e "\nCreating ansible.cfg.example ... \n\n"
     ansible-config init --disabled -t all > ansible.cfg.example
 fi
 
-if [ ! -f ansible.cfg.example ];
+echo -e "\nCreating ansible.cfg ... \n\n"
+if [ ! -f ansible.cfg ];
 then
 cat <<'EOF' > ansible.cfg
 [defaults]
   nocows=1
+  inventory=inventory.yml
   log_path=ansible-log.txt
 EOF
 fi
 
 
-if [ ! -f ${ANSIBLE_SSH_KEY} ];
+if [ ! -f "${ANSIBLE_SSH_KEY}" ];
 then
-    echo "Not found Ansible SSH key file (${ANSIBLE_SSH_KEY}), creating it - do not forget to deploy to hosts"
+    echo -e "\nNot found Ansible SSH key file (${ANSIBLE_SSH_KEY}), creating it"
+    echo -e "Do not forget to deploy the key to managed hosts !\n\n"
     ssh-keygen -t ed25519 -f "./${ANSIBLE_SSH_KEY}" || exit 1
 fi
 
 if [ ! -f "./${ANSIBLE_INVENTORY_FILE}" ];
 then
-    echo "Not found Ansible inventory file (${ANSIBLE_INVENTORY_FILE}), creating"
-    cp ./inventory.yml.example ${ANSIBLE_INVENTORY_FILE} || exit 1
+    echo "Not found Ansible inventory file: ${ANSIBLE_INVENTORY_FILE}, creating"
+    cp ./inventory.yml.example "${ANSIBLE_INVENTORY_FILE}" || exit 1
 fi
 
-# TOOD az ansible configban elvileg már be van állitva az inventory vagy kellene.... 
-ansible-inventory -i ${ANSIBLE_INVENTORY_FILE} --graph || exit 1
+ansible-inventory --graph || exit 1
 
 deactivate
 
-echo "Ansible has been sucessfully initialized"
+echo -e "\n\nAnsible setup has been finished\n"

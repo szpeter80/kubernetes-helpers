@@ -1,0 +1,5 @@
+.venv
+inventory.yml
+ansible_ssh_key*
+ansible.cfg
+ansible.cfg.example
