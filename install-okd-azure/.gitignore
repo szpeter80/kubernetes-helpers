@@ -1,6 +1,0 @@
-.terraform
-.terraform.*
-terraform.tfstate*
-terraform.tfvars
-*.vhd
-okd-demokey*

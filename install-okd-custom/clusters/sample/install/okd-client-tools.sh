@@ -1,1 +1,0 @@
-../../../11-okd-client-tools.sh

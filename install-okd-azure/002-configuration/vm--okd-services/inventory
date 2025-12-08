@@ -1,5 +1,0 @@
-okd-services
-okd-cluster-bootstrap
-
-[nodes]
-okd-node-0[1:3]
