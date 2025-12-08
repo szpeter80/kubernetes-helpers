@@ -45,9 +45,15 @@ if [ ! -f ansible.cfg ];
 then
 cat <<'EOF' > ansible.cfg
 [defaults]
-  nocows=1
-  inventory=inventory.yml
-  log_path=ansible-log.txt
+
+nocows=1
+
+inventory=inventory.yml
+
+roles_path={{ "./roles:" ~ ANSIBLE_HOME ~ "/roles:/usr/share/ansible/roles:/etc/ansible/roles" }}
+collections_path={{ "./collections:" ~ ANSIBLE_HOME ~ "/collections:/usr/share/ansible/collections" }}
+
+log_path=ansible-log.txt
 EOF
 fi
 
