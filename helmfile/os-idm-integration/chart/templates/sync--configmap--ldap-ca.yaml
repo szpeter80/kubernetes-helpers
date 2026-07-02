@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: idm--ldap-ca
+  namespace: {{ .Release.Namespace | quote }}
+data:
+  ca.crt: |-
+    // embed your ldap ca here
