@@ -1,55 +1,47 @@
 #!/bin/bash
 
 I_KUBECTL_VERSION=$(curl -q -L -s https://dl.k8s.io/release/stable.txt)
-I_KUBECTL_DIR='/usr/local/bin/kubectl.d'
+I_KUBECTL_DIR='/usr/local/bin/'
 I_CPU_ARCH='amd64'
 
-
-if [ -f "./install-kubectl.env" ];
+CUSTOM_ENV_REALPATH="./custom.env"
+if [ -f "$CUSTOM_ENV_REALPATH" ];
 then
-    echo "Applying variables override"
-    # shellcheck source=install-kubectl.env.example
-    . "./install-kubectl.env"
+    echo "Sourcing custom environment: ${CUSTOM_ENV_REALPATH}"
+    source "$CUSTOM_ENV_REALPATH"
 fi
 
+###############################################################################
 
-DST_DIR="${I_KUBECTL_DIR}/${I_KUBECTL_VERSION}"
-
-if [ -d "${DST_DIR}" ];
+if [ "${DEBUG}" = "1" ];
 then
-    echo "Version ${I_KUBECTL_VERSION} seems to be installed, exiting ..."
+    set -x
+fi
+
+if [ -f "${I_KUBECTL_DIR}/kubectl" ];
+then
+    echo "${I_KUBECTL_DIR}/kubectl already present, exiting ..."
     exit 0
 fi
-
-echo "Creating destination directory: ${DST_DIR}"
-mkdir -p "${DST_DIR}"
 
 # Ask Curl to follow redirects and use the remote filename as local filename
 curl --location --remote-name  \
     "https://dl.k8s.io/release/${I_KUBECTL_VERSION}/bin/linux/${I_CPU_ARCH}/kubectl" \
-    --output-dir "${DST_DIR}"
+    --output-dir "${I_KUBECTL_DIR}"
 
-if [ ! -f "${DST_DIR}/kubectl" ];
+if [ ! -f "${I_KUBECTL_DIR}/kubectl" ];
 then
     echo "ERROR: kubectl download failed, exiting ..."
     exit 1
 fi
 
-chown root:root "${DST_DIR}/kubectl"
+chown root:root "${I_KUBECTL_DIR}/kubectl"
 chmod 755 "${DST_DIR}/kubectl"
 
-"${DST_DIR}/kubectl" completion bash > "${DST_DIR}/kubectl_completion_bash"
-
-if [[ ! -f "${I_KUBECTL_DIR}/../kubectl" || -L "${I_KUBECTL_DIR}/../kubectl" ]];
+if [[ ! -d ~/bashrc.d ]];
 then
-    echo "Updating symlink for kubectl:  ${I_KUBECTL_DIR}/../kubectl --> ${DST_DIR}/kubectl"
-    rm -f "${I_KUBECTL_DIR}/../kubectl"
-    ln -s  "${DST_DIR}/kubectl"  "${I_KUBECTL_DIR}/../kubectl"
+  mkdir ~/bashrc.d
 fi
 
-if [[ ! -f "${I_KUBECTL_DIR}/../kubectl_completion_bash" || -L "${I_KUBECTL_DIR}/../kubectl_completion_bash" ]];
-then
-    echo "Updating symlink for kubectl:  ${I_KUBECTL_DIR}/../kubectl_completion_bash --> ${DST_DIR}/kubectl_completion_bash"
-    rm -f "${I_KUBECTL_DIR}/../kubectl_completion_bash"
-    ln -s  "${DST_DIR}/kubectl_completion_bash"  "${I_KUBECTL_DIR}/../kubectl_completion_bash"
-fi
+"${I_KUBECTL_DIR}/kubectl" completion bash > ~/bashrc.d/kubectl
+
