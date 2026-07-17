@@ -4,8 +4,8 @@
 ###
 
 
-# OCP_VERSION=latest-4.20 | stable-4.20 | 4.20.2
-OCP_VERSION=latest-4.20
+# OCP_VERSION=latest-4.22 | stable-4.22 | 4.22.2
+OCP_VERSION=latest-4.22
 # ARCH=aarch64 | x86_64
 ARCH=x86_64
 ISO_PREFIX="os-example"
@@ -40,6 +40,7 @@ if [[ "$1" == "--client-download" ]]; then
     echo -e "\n\nDownloading installer and client binaries... \n"
     curl -k https://mirror.openshift.com/pub/openshift-v4/clients/ocp/$OCP_VERSION/openshift-install-linux.tar.gz -o openshift-install-linux.tar.gz
     curl -k https://mirror.openshift.com/pub/openshift-v4/clients/ocp/$OCP_VERSION/openshift-client-linux.tar.gz -o openshift-client-linux.tar.gz
+    curl -k https://mirror.openshift.com/pub/openshift-v4/clients/butane/latest/butane --output butane
     exit 1
 fi
 
@@ -123,6 +124,13 @@ else
     ${RHCOS_FN}
 
 fi
+
+sudo ${COREOS_INSTALLER}                                   \
+iso  customize                                             \
+--dest-device=/dev/sda                                     \
+--dest-ignition worker.ign                                 \
+-o "${ISO_PREFIX}-worker.iso"                              \
+${RHCOS_FN}
 
 sudo chmod a+r ./"${ISO_PREFIX}"*.iso
 
