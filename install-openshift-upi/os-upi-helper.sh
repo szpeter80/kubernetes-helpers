@@ -73,6 +73,9 @@ else
 fi
 
 # If VMWare used, customising is possible
+# Typically the bootstrap ignition is larger than the max size of VM parameter
+# In that case a chainloader small ignition can be embedded, and the installer-generated ignition is put to a web server
+
 ## guestinfo.afterburn.initrd.network-kargs="ip=1.2.3.4::1.2.3.255:255.255.255.0:hostname.my-cluster.example.com:ens192:none nameserver=192.168.1.1 nameserver=192.168.2.1"
 ## guestinfo.ignition.config.data=<base64 -w0 encoded content of ignition>
 ## guestinfo.ignition.config.data.encoding=base64
