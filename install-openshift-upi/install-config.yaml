@@ -1,1 +1,61 @@
 ---
+# https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html-single/installing_on_any_platform/index#installation-bare-metal-config-yaml_installing-platform-agnostic
+
+apiVersion: v1
+baseDomain: example.com
+
+proxy:
+  httpProxy: 'http://user:pass@proxy.example.com:8080'
+  httpsProxy: 'http://user:pass@proxy.example.com:8080'
+  noProxy: '.example.xom,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16'
+
+compute:
+- hyperthreading: Enabled
+  name: worker
+  replicas: 0
+  architecture: amd64
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  replicas: 3
+  architecture: amd64
+metadata:
+  name: my-cluster
+
+networking:
+  networkType: OVNKubernetes
+
+# Pod network, subnetted per-node
+  clusterNetwork:
+  - cidr: 10.128.0.0/14
+    hostPrefix: 23
+
+# Service network
+  serviceNetwork:
+  - 172.30.0.0/16
+
+# Nodes addresses
+  machineNetwork:
+  - cidr: 192.168.1.0.0/24
+
+platform:
+  none: {}
+fips: false
+pullSecret: '{"auths": ...}'
+sshKey: 'ssh-ed25519 AAAA...'
+
+additionalTrustBundle: |
+    -----BEGIN CERTIFICATE-----
+    <internal-root-ca>
+    -----END CERTIFICATE-----
+    -----BEGIN CERTIFICATE-----
+    <internal-signing-ca>
+    -----END CERTIFICATE-----
+
+ImageDigestSources:
+- mirrors:
+  - my-internal-container-registry.example.com/openshift-release-dev/ocp-release
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - my-internal-container-registry.example.com/openshift-release-dev/ocp-v4.0-art-dev
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
